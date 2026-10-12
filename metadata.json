@@ -1,0 +1,6 @@
+{
+  "name": "Resonant Winds - Interactive Wind Chimes",
+  "description": "An authentic acoustic wind chime simulation with physically-modeled modal acoustics, real tube resonance, interactive hover and breeze physics, and serene ambiances.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
