@@ -13,7 +13,6 @@ import {
   InteractiveGlyphCurtain,
   InteractiveGlyphCurtainHandle,
 } from './components/curtain/InteractiveGlyphCurtain';
-import { ArchitecturalEntrance } from './components/curtain/ArchitecturalEntrance';
 import { CurtainControls } from './components/curtain/CurtainControls';
 import { ExportCodeModal } from './components/curtain/ExportCodeModal';
 import { curtainAudio } from './components/curtain/curtainAudio';
@@ -24,7 +23,8 @@ import {
   Code2,
   Sun,
   Moon,
-  Sparkles,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export default function App() {
@@ -35,6 +35,40 @@ export default function App() {
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [showControls, setShowControls] = useState<boolean>(true);
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
+  const [showCanvasInfo, setShowCanvasInfo] = useState<boolean>(true);
+
+  // Inspector Panel Resizing (hold and drag left border to change width)
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('resonant_inspector_width');
+      if (saved) {
+        const val = parseInt(saved, 10);
+        if (!isNaN(val) && val >= 280 && val <= 640) return val;
+      }
+    }
+    return 384;
+  });
+  const [isResizing, setIsResizing] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!isResizing) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      const newWidth = Math.max(280, Math.min(640, window.innerWidth - e.clientX));
+      setSidebarWidth(newWidth);
+    };
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      try {
+        localStorage.setItem('resonant_inspector_width', sidebarWidth.toString());
+      } catch {}
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, sidebarWidth]);
 
   // Canvas Theme: 'dark' (Nothing Studio Dark) or 'paper' (Warm Japanese Gallery Paper)
   const [canvasTheme, setCanvasTheme] = useState<'dark' | 'paper'>('dark');
@@ -202,52 +236,18 @@ export default function App() {
     <div className="relative w-screen h-screen overflow-hidden flex flex-col bg-[#09090b] text-stone-100 select-none antialiased">
       {/* Top Bar Header (SaaS Studio Top Bar) */}
       <header className="h-13 w-full flex items-center justify-between px-5 border-b border-white/[0.08] bg-[#0c0c0e]/95 backdrop-blur-md z-30 shrink-0">
-        {/* Zone 1: Wordmark & Scene Mode Switcher */}
-        <div className="flex items-center gap-4">
+        {/* Zone 1: Wordmark */}
+        <div className="flex items-center gap-3">
           <span className="font-serif tracking-widest text-sm font-bold text-stone-100 uppercase">
             Resonant Curtain
           </span>
-
-          {/* Mode Switcher Segmented Control */}
-          <div className="hidden sm:flex items-center gap-1 p-0.5 bg-black/40 rounded-lg border border-white/[0.08] text-xs">
-            <button
-              type="button"
-              onClick={() => setSceneMode('effect-only')}
-              className={`px-3 py-1 rounded-md transition-all font-medium cursor-pointer ${
-                sceneMode === 'effect-only'
-                  ? 'bg-stone-800 text-amber-300 font-semibold shadow-xs'
-                  : 'text-stone-400 hover:text-stone-200'
-              }`}
-            >
-              Effect Canvas
-            </button>
-            <button
-              type="button"
-              onClick={() => setSceneMode('entrance')}
-              className={`px-3 py-1 rounded-md transition-all font-medium cursor-pointer ${
-                sceneMode === 'entrance'
-                  ? 'bg-stone-800 text-amber-300 font-semibold shadow-xs'
-                  : 'text-stone-400 hover:text-stone-200'
-              }`}
-            >
-              Gateway Arch
-            </button>
-          </div>
+          <span className="text-[11px] font-mono text-stone-500 hidden sm:inline">
+            Physical Audio-Visual Matrix
+          </span>
         </div>
 
-
-        {/* Zone 3: Primary SaaS Actions */}
+        {/* Zone 2: Primary Studio Actions */}
         <div className="flex items-center gap-2">
-          {/* Motion State */}
-          <button
-            type="button"
-            onClick={handleCycleMotion}
-            className="hidden xl:inline-block text-[11px] font-mono text-stone-400 hover:text-stone-200 px-2 py-1 rounded border border-transparent hover:border-white/10 transition-colors"
-            title="Click to toggle motion mode"
-          >
-            {motionSetting === 'full' ? 'Full Motion' : motionSetting === 'reduced' ? 'Reduced' : 'Normal'}
-          </button>
-
           {/* Sound Toggle */}
           <button
             type="button"
@@ -291,16 +291,12 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Studio Workspace: Full-Height Canvas Stage + Collapsible Right Sidebar */}
+      {/* Main Studio Workspace: Full-Height Canvas Stage + Collapsible Resizable Right Sidebar */}
       <div className="relative flex-1 w-full overflow-hidden flex flex-row">
         {/* The Hero Stage (Full Height / Width Interactive Canvas) */}
         <main
           className={`relative flex-1 h-full overflow-hidden flex items-center justify-center transition-colors ${
-            sceneMode === 'effect-only'
-              ? canvasTheme === 'dark'
-                ? 'bg-[#09090b]'
-                : 'bg-[#fbf9f5]'
-              : 'bg-[#09090b]'
+            canvasTheme === 'dark' ? 'bg-[#09090b]' : 'bg-[#fbf9f5]'
           }`}
         >
           {/* Floating Expand Tab on Right Edge (when Inspector is collapsed) */}
@@ -318,49 +314,66 @@ export default function App() {
             </button>
           )}
 
-          {sceneMode === 'effect-only' ? (
-            /* Mode 1: Effect Canvas */
-            <div className="relative w-full h-full flex items-center justify-center">
-              <InteractiveGlyphCurtain
-                ref={curtainRef}
-                config={effectConfig}
-                audioEnabled={isSoundActive}
-                reducedMotion={isReducedMotion}
-                onDiagnosticsUpdate={setDiagnostics}
-                className="w-full h-full"
-              />
+          {/* Interactive Glyph Curtain Canvas */}
+          <div className="relative w-full h-full flex items-center justify-center">
+            <InteractiveGlyphCurtain
+              ref={curtainRef}
+              config={effectConfig}
+              audioEnabled={isSoundActive}
+              reducedMotion={isReducedMotion}
+              onDiagnosticsUpdate={setDiagnostics}
+              className="w-full h-full"
+            />
 
-              {/* Theme Switcher in Canvas Top-Right */}
-              <div className="absolute top-4 right-5 z-10 flex items-center gap-1 p-0.5 bg-black/40 backdrop-blur-md rounded-lg border border-white/10 text-[11px] font-mono shadow-sm">
-                <button
-                  type="button"
-                  onClick={() => handleToggleCanvasTheme('dark')}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
-                    canvasTheme === 'dark'
-                      ? 'bg-stone-800 text-stone-100 font-semibold shadow-xs'
-                      : 'text-stone-400 hover:text-stone-200'
-                  }`}
-                  title="Studio Void Dark theme"
-                >
-                  <Moon className="w-3 h-3" />
-                  <span>Void</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleToggleCanvasTheme('paper')}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
-                    canvasTheme === 'paper'
-                      ? 'bg-stone-200 text-stone-900 font-semibold shadow-xs'
-                      : 'text-stone-400 hover:text-stone-200'
-                  }`}
-                  title="Japanese Gallery Paper theme"
-                >
-                  <Sun className="w-3 h-3" />
-                  <span>Paper</span>
-                </button>
-              </div>
+            {/* Quick Canvas Controls (Theme & HUD toggle) in Canvas Top-Right */}
+            <div className="absolute top-4 right-5 z-10 flex items-center gap-1.5 p-0.5 bg-black/40 backdrop-blur-md rounded-lg border border-white/10 text-[11px] font-mono shadow-sm">
+              <button
+                type="button"
+                onClick={() => handleToggleCanvasTheme('dark')}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                  canvasTheme === 'dark'
+                    ? 'bg-stone-800 text-stone-100 font-semibold shadow-xs'
+                    : 'text-stone-400 hover:text-stone-200'
+                }`}
+                title="Studio Void Dark theme"
+              >
+                <Moon className="w-3 h-3" />
+                <span>Void</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleToggleCanvasTheme('paper')}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                  canvasTheme === 'paper'
+                    ? 'bg-stone-200 text-stone-900 font-semibold shadow-xs'
+                    : 'text-stone-400 hover:text-stone-200'
+                }`}
+                title="Japanese Gallery Paper theme"
+              >
+                <Sun className="w-3 h-3" />
+                <span>Paper</span>
+              </button>
 
-              {/* Clean Unboxed Metadata in Canvas Bottom-Left (Zero-Pill Discipline) */}
+              <div className="w-[1px] h-3.5 bg-white/10 mx-0.5" />
+
+              {/* HUD / Clean Zen View Toggle */}
+              <button
+                type="button"
+                onClick={() => setShowCanvasInfo(prev => !prev)}
+                className={`flex items-center gap-1 px-2 py-1 rounded-md transition-colors cursor-pointer ${
+                  showCanvasInfo
+                    ? 'text-amber-300 font-medium'
+                    : 'text-stone-500 hover:text-stone-300'
+                }`}
+                title={showCanvasInfo ? 'Hide canvas info (Zen mode)' : 'Show canvas info (HUD)'}
+              >
+                {showCanvasInfo ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                <span className="hidden sm:inline">{showCanvasInfo ? 'HUD' : 'Zen'}</span>
+              </button>
+            </div>
+
+            {/* Clean Unboxed Metadata in Canvas Bottom-Left */}
+            {showCanvasInfo && (
               <div
                 className={`absolute bottom-4 left-6 pointer-events-none text-xs font-mono tracking-wide flex items-center gap-2 ${
                   canvasTheme === 'dark' ? 'text-stone-400' : 'text-stone-600'
@@ -376,8 +389,10 @@ export default function App() {
                 <span aria-hidden="true">·</span>
                 <span className="capitalize">{activePreset ? activePreset.material : curtainAudio.material}</span>
               </div>
+            )}
 
-              {/* Unobtrusive Interaction Hint in Canvas Bottom-Right */}
+            {/* Unobtrusive Interaction Hint in Canvas Bottom-Right */}
+            {showCanvasInfo && (
               <div
                 className={`absolute bottom-4 right-6 pointer-events-none hidden sm:flex items-center gap-3 text-xs font-mono ${
                   canvasTheme === 'dark' ? 'text-stone-500' : 'text-stone-400'
@@ -387,35 +402,34 @@ export default function App() {
                 <span aria-hidden="true">·</span>
                 <span>Space to ripple</span>
               </div>
-            </div>
-          ) : (
-            /* Mode 2: Gateway Arch Scene */
-            <div className="relative w-full h-full">
-              <ArchitecturalEntrance
-                ref={curtainRef}
-                config={entranceConfig}
-                customOverlayUrl={customOverlayUrl}
-                customBackgroundUrl={customBackgroundUrl}
-                audioEnabled={isSoundActive}
-                reducedMotion={isReducedMotion}
-                onDiagnosticsUpdate={setDiagnostics}
-              />
-
-              {/* Bottom Unboxed Metadata */}
-              <div className="absolute bottom-4 left-6 pointer-events-none text-xs font-mono tracking-wide flex items-center gap-2 text-stone-400">
-                <span className="text-stone-200 font-semibold">{activePreset ? activePreset.name : 'Custom Gateway'}</span>
-                <span aria-hidden="true">·</span>
-                <span>Archway Masking Active</span>
-                <span aria-hidden="true">·</span>
-                <span className="capitalize">{activePreset ? activePreset.material : curtainAudio.material}</span>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </main>
 
-        {/* The Studio Inspector Panel (Collapsible Right Sidebar) */}
+        {/* The Studio Inspector Panel (Collapsible & Draggable Resizable Sidebar) */}
         {showControls && (
-          <aside className="w-80 lg:w-96 h-full border-l border-white/[0.08] shadow-2xl z-20 shrink-0 flex flex-col animate-in slide-in-from-right duration-200">
+          <aside
+            style={{ width: `${sidebarWidth}px` }}
+            className="relative h-full border-l border-white/[0.08] shadow-2xl z-20 shrink-0 flex flex-col bg-[#09090c] animate-in slide-in-from-right duration-200"
+          >
+            {/* Draggable Left Resize Handle (Hold and drag to change size) */}
+            <div
+              onMouseDown={e => {
+                e.preventDefault();
+                setIsResizing(true);
+              }}
+              className={`absolute -left-1.5 top-0 bottom-0 w-3 cursor-ew-resize z-30 group transition-colors flex items-center justify-center ${
+                isResizing ? 'bg-amber-400/40' : 'hover:bg-amber-400/20'
+              }`}
+              title="Drag to resize Inspector panel width"
+            >
+              <div
+                className={`w-0.5 h-10 rounded-full transition-colors ${
+                  isResizing ? 'bg-amber-400' : 'bg-white/20 group-hover:bg-amber-400/70'
+                }`}
+              />
+            </div>
+
             <CurtainControls
               config={currentConfig}
               onChangeConfig={handleConfigChange}

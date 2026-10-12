@@ -95,7 +95,7 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
   onOpenExportModal,
   onClose,
 }) => {
-  const [activeTab, setActiveTab] = useState<'presets' | 'visuals' | 'physics' | 'gateway' | 'diagnostics'>('presets');
+  const [activeTab, setActiveTab] = useState<'presets' | 'visuals' | 'physics'>('presets');
   const [customText, setCustomText] = useState<string>(config.glyphSet);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<PresetCategory | 'favorites'>('all');
@@ -250,7 +250,7 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
 
       {/* Modern SaaS Segmented Tabs */}
       <div className="px-3 pt-2.5 pb-2 border-b border-white/[0.06] bg-[#0c0c10] shrink-0">
-        <div className="grid grid-cols-5 gap-1 p-0.5 bg-[#050508] rounded-lg border border-white/[0.06]">
+        <div className="grid grid-cols-3 gap-1 p-0.5 bg-[#050508] rounded-lg border border-white/[0.06]">
           <button
             type="button"
             onClick={() => setActiveTab('presets')}
@@ -283,28 +283,6 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
             }`}
           >
             Physics
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('gateway')}
-            className={`py-1 text-[11px] font-medium rounded-md transition-all cursor-pointer truncate ${
-              activeTab === 'gateway'
-                ? 'bg-stone-800 text-amber-300 shadow-sm font-semibold'
-                : 'text-stone-400 hover:text-stone-200'
-            }`}
-          >
-            Gateway
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('diagnostics')}
-            className={`py-1 text-[11px] font-medium rounded-md transition-all cursor-pointer truncate ${
-              activeTab === 'diagnostics'
-                ? 'bg-stone-800 text-amber-300 shadow-sm font-semibold'
-                : 'text-stone-400 hover:text-stone-200'
-            }`}
-          >
-            Debug
           </button>
         </div>
       </div>
@@ -837,202 +815,9 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
                 System state: {systemPrefersReduced ? 'Reduced Motion Active' : 'Standard Motion'}
               </span>
             </div>
-          </div>
-        )}
-
-        {/* ======================================================== */}
-        {/* TAB 4: ARCHITECTURAL GATEWAY & ASSET UPLOADS             */}
-        {/* ======================================================== */}
-        {activeTab === 'gateway' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider font-mono">
-                Gateway Mode
-              </span>
-              <button
-                type="button"
-                onClick={() => onChangeSceneMode(sceneMode === 'entrance' ? 'effect-only' : 'entrance')}
-                className={`text-[10px] font-semibold px-2 py-0.5 rounded border transition-colors cursor-pointer ${
-                  sceneMode === 'entrance'
-                    ? 'bg-amber-400/10 text-amber-300 border-amber-400/30'
-                    : 'bg-white/[0.04] text-stone-400 border-white/[0.08]'
-                }`}
-              >
-                {sceneMode === 'entrance' ? 'Enabled' : 'Click to Enable'}
-              </button>
-            </div>
-
-            {/* Mask Opening Controls */}
-            {config.clipOpening && (
-              <div className="space-y-3 pt-2 border-t border-white/[0.06]">
-                <div className="flex items-center justify-between text-xs text-stone-300">
-                  <span>Clip Arch Opening</span>
-                  <input
-                    type="checkbox"
-                    checked={config.clipOpening.enabled}
-                    onChange={e =>
-                      onChangeConfig({
-                        ...config,
-                        clipOpening: { ...config.clipOpening!, enabled: e.target.checked },
-                      })
-                    }
-                    className="accent-amber-400"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs text-stone-400">
-                    <span>Archway Width</span>
-                    <span className="font-mono tabular-nums text-stone-200">
-                      {Math.round(config.clipOpening.width * 100)}%
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0.2}
-                    max={0.9}
-                    step={0.02}
-                    value={config.clipOpening.width}
-                    onChange={e =>
-                      onChangeConfig({
-                        ...config,
-                        clipOpening: { ...config.clipOpening!, width: parseFloat(e.target.value) },
-                      })
-                    }
-                    className="w-full accent-amber-400"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs text-stone-400">
-                    <span>Archway Height</span>
-                    <span className="font-mono tabular-nums text-stone-200">
-                      {Math.round(config.clipOpening.height * 100)}%
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0.3}
-                    max={0.95}
-                    step={0.02}
-                    value={config.clipOpening.height}
-                    onChange={e =>
-                      onChangeConfig({
-                        ...config,
-                        clipOpening: { ...config.clipOpening!, height: parseFloat(e.target.value) },
-                      })
-                    }
-                    className="w-full accent-amber-400"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Image Uploaders */}
-            <div className="space-y-3 pt-2 border-t border-white/[0.06]">
-              <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider font-mono block">
-                Custom Scene Assets
-              </span>
-
-              {/* Background Scene */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs text-stone-300">
-                  <span>Background Scene</span>
-                  {customBackgroundUrl && (
-                    <button
-                      type="button"
-                      onClick={onClearBackground}
-                      className="text-[10px] text-rose-400 hover:text-rose-300"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-                <label className="flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed border-white/20 hover:border-white/40 cursor-pointer bg-white/[0.02] hover:bg-white/[0.04] transition-colors text-xs text-stone-400">
-                  <Upload className="w-3.5 h-3.5 text-stone-400" />
-                  <span>{customBackgroundUrl ? 'Change Background' : 'Upload Background Image'}</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={e => {
-                      if (e.target.files && e.target.files[0]) {
-                        onUploadBackground(e.target.files[0]);
-                      }
-                    }}
-                  />
-                </label>
-              </div>
-
-              {/* Foreground Overlay */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs text-stone-300">
-                  <span>Doorway Frame Overlay</span>
-                  {customOverlayUrl && (
-                    <button
-                      type="button"
-                      onClick={onClearOverlay}
-                      className="text-[10px] text-rose-400 hover:text-rose-300"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-                <label className="flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed border-white/20 hover:border-white/40 cursor-pointer bg-white/[0.02] hover:bg-white/[0.04] transition-colors text-xs text-stone-400">
-                  <Upload className="w-3.5 h-3.5 text-stone-400" />
-                  <span>{customOverlayUrl ? 'Change Frame' : 'Upload PNG Doorway Frame'}</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={e => {
-                      if (e.target.files && e.target.files[0]) {
-                        onUploadOverlay(e.target.files[0]);
-                      }
-                    }}
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ======================================================== */}
-        {/* TAB 5: DIAGNOSTICS & TELEMETRY                           */}
-        {/* ======================================================== */}
-        {activeTab === 'diagnostics' && (
-          <div className="space-y-4">
-            <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider font-mono block">
-              System Telemetry
-            </span>
-
-            <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-              <div className="p-2.5 rounded-lg bg-black/40 border border-white/10 space-y-1">
-                <span className="text-[10px] text-stone-500 block">AudioContext</span>
-                <span className={`font-bold ${audioContextState === 'running' ? 'text-emerald-400' : 'text-amber-400'}`}>
-                  {audioContextState}
-                </span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-black/40 border border-white/10 space-y-1">
-                <span className="text-[10px] text-stone-500 block">Affected Cords</span>
-                <span className="text-stone-200 font-bold">{diagnostics.affectedStrands}</span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-black/40 border border-white/10 space-y-1">
-                <span className="text-[10px] text-stone-500 block">Cursor X/Y</span>
-                <span className="text-stone-200">
-                  {Math.round(diagnostics.pointerX)}, {Math.round(diagnostics.pointerY)}
-                </span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-black/40 border border-white/10 space-y-1">
-                <span className="text-[10px] text-stone-500 block">Hit Target</span>
-                <span className={diagnostics.isInside ? 'text-emerald-400' : 'text-stone-500'}>
-                  {diagnostics.isInside ? 'Inside Canvas' : 'Outside'}
-                </span>
-              </div>
-            </div>
 
             {/* Quick Test Triggers */}
-            <div className="space-y-2 pt-2 border-t border-white/[0.06]">
+            <div className="pt-2 border-t border-white/[0.06] space-y-2">
               <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider font-mono block">
                 Verification Impulses
               </span>
