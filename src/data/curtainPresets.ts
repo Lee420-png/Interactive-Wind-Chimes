@@ -4,6 +4,7 @@
  */
 
 import { GlyphCurtainConfig } from '../types/curtain';
+import { ChimeScaleId } from '../components/curtain/curtainAudio';
 
 export type CurtainMaterial =
   | 'crystal'
@@ -22,6 +23,7 @@ export interface CurtainPreset {
   name: string;
   tagline: string;
   material: CurtainMaterial;
+  scale?: ChimeScaleId;
   category: 'acoustic' | 'cyber' | 'elemental' | 'sacred';
   physicsDescription: string;
   audioDescription: string;
@@ -33,6 +35,7 @@ export const CURTAIN_PRESETS: CurtainPreset[] = [
   // 1. Silk & Crystal Koshi
   {
     id: 'koshi-crystal',
+    scale: 'koshi-aria',
     name: 'Silk & Crystal Koshi',
     tagline: 'Light, supple, fluid wave propagation with crystalline resonance',
     material: 'crystal',
@@ -91,6 +94,7 @@ export const CURTAIN_PRESETS: CurtainPreset[] = [
   // 2. Kyoto Temple Bamboo
   {
     id: 'kyoto-bamboo',
+    scale: 'bamboo-folk',
     name: 'Kyoto Temple Bamboo',
     tagline: 'Segmented hollow wood beads with earthy weight and organic clatter',
     material: 'bamboo',
@@ -149,6 +153,7 @@ export const CURTAIN_PRESETS: CurtainPreset[] = [
   // 3. Ancient Bronze Pagoda
   {
     id: 'ancient-bronze',
+    scale: 'tibetan',
     name: 'Ancient Bronze Pagoda',
     tagline: 'Dense cast bronze rings with heavy inertia and majestic pendulum swing',
     material: 'bronze',
@@ -207,6 +212,7 @@ export const CURTAIN_PRESETS: CurtainPreset[] = [
   // 4. Edo Fūrin Wind Bell
   {
     id: 'edo-furin',
+    scale: 'akebono',
     name: 'Edo Fūrin Wind Bell',
     tagline: 'Porcelain pendants & fluttering Tanzaku paper ribbons',
     material: 'furin',
@@ -265,6 +271,7 @@ export const CURTAIN_PRESETS: CurtainPreset[] = [
   // 5. Himalayan Singing Bowl
   {
     id: 'himalayan-bowl',
+    scale: 'singing-bowl',
     name: 'Himalayan Singing Bowl',
     tagline: 'Deep meditative overtone beating with weighty spiritual pendulum swing',
     material: 'bowl',
@@ -323,6 +330,7 @@ export const CURTAIN_PRESETS: CurtainPreset[] = [
   // 6. Nordic Frost Silver
   {
     id: 'nordic-silver',
+    scale: 'woodstock',
     name: 'Nordic Frost Silver',
     tagline: 'Polished silver rods with crystalline high-register sparkle & fluid flutter',
     material: 'silver',
@@ -381,6 +389,7 @@ export const CURTAIN_PRESETS: CurtainPreset[] = [
   // 7. Obsidian River Stone
   {
     id: 'obsidian-stone',
+    scale: 'slendro',
     name: 'Obsidian River Stone',
     tagline: 'Smooth tumbled volcanic stones with earthy mass and organic clatter',
     material: 'stone',
@@ -439,6 +448,7 @@ export const CURTAIN_PRESETS: CurtainPreset[] = [
   // 8. Celestial Aeolian Harp
   {
     id: 'celestial-harp',
+    scale: 'aeolian-harp',
     name: 'Celestial Aeolian Harp',
     tagline: 'Tuned singing copper filaments responding to ambient wind harmonics',
     material: 'harp',
@@ -497,6 +507,7 @@ export const CURTAIN_PRESETS: CurtainPreset[] = [
   // 9. Cyberpunk Neo-Matrix (NEW)
   {
     id: 'cyber-matrix',
+    scale: 'koshi-aria',
     name: 'Cyberpunk Neo-Matrix',
     tagline: 'Terminal phosphor code stream with snappy spring response and digital crystal ping',
     material: 'crystal',
@@ -555,6 +566,7 @@ export const CURTAIN_PRESETS: CurtainPreset[] = [
   // 10. Arctic Aurora Glacial (NEW)
   {
     id: 'aurora-glacier',
+    scale: 'woodstock',
     name: 'Arctic Aurora Glacier',
     tagline: 'Ethereal sub-zero ice runes with fluid low-gravity wave drift and pure silver bells',
     material: 'silver',
@@ -613,6 +625,7 @@ export const CURTAIN_PRESETS: CurtainPreset[] = [
   // 11. Molten Gold Alchemist (NEW)
   {
     id: 'solar-corona',
+    scale: 'tibetan',
     name: 'Molten Gold Alchemist',
     tagline: 'Gleaming astronomical bronze sigils with authoritative gravitational swing',
     material: 'bronze',
@@ -671,6 +684,7 @@ export const CURTAIN_PRESETS: CurtainPreset[] = [
   // 12. Imperial Sakura Blossom (NEW)
   {
     id: 'sakura-imperial',
+    scale: 'akebono',
     name: 'Imperial Sakura Blossom',
     tagline: 'Spring cherry blossom kanji with sensitive air flutter & porcelain wind bell',
     material: 'furin',
@@ -729,6 +743,7 @@ export const CURTAIN_PRESETS: CurtainPreset[] = [
   // 13. Abyssal Bioluminescence (NEW)
   {
     id: 'abyssal-veil',
+    scale: 'singing-bowl',
     name: 'Abyssal Bioluminescent Veil',
     tagline: 'Deep ocean teal glow with fluid hydrodynamic resistance & singing bowl resonance',
     material: 'bowl',
@@ -787,6 +802,7 @@ export const CURTAIN_PRESETS: CurtainPreset[] = [
   // 14. Notre-Dame Gothic Sanctum (NEW)
   {
     id: 'gothic-sanctum',
+    scale: 'tibetan',
     name: 'Notre-Dame Gothic Sanctum',
     tagline: 'Heavy cathedral copper & iron with solemn pendulum mass and great church bell resonance',
     material: 'bronze',
@@ -845,6 +861,7 @@ export const CURTAIN_PRESETS: CurtainPreset[] = [
   // 15. Retro 80s Synthwave (NEW)
   {
     id: 'synthwave-80s',
+    scale: 'woodstock',
     name: 'Retro 80s Synthwave Grid',
     tagline: 'Neon violet geometric vector prisms with snappy tension and sparkling silver chime',
     material: 'silver',
@@ -903,6 +920,7 @@ export const CURTAIN_PRESETS: CurtainPreset[] = [
   // 16. Wabi-Sabi Black Slate (NEW)
   {
     id: 'zen-slate',
+    scale: 'slendro',
     name: 'Wabi-Sabi Black Slate',
     tagline: 'Minimalist carved river stone tablets with rapid settling and dry stone clatter',
     material: 'stone',

@@ -2,32 +2,148 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-
 import { CurtainMaterial } from '../../data/curtainPresets';
 
-// 24 Tuned Pentatonic Chime Frequencies spanning D3 to G6 (Consonant, Meditative, Celestial)
-export const STRAND_PENTATONIC_SCALE = [
-  146.83, // D3 (warm foundation)
-  164.81, // E3
-  196.00, // G3
-  220.00, // A3
-  246.94, // B3
-  293.66, // D4 (rich singing chime)
-  329.63, // E4
-  392.00, // G4
-  440.00, // A4 (concert center)
-  493.88, // B4
-  523.25, // C5
-  587.33, // D5 (crystalline bell)
-  659.25, // E5
-  783.99, // G5
-  880.00, // A5
-  987.77, // B5
-  1046.50, // C6
-  1174.66, // D6 (pure celestial sparkle)
-  1318.51, // E6
-  1567.98, // G6
-];
+export type ChimeScaleId =
+  | 'akebono'
+  | 'bamboo-folk'
+  | 'tibetan'
+  | 'singing-bowl'
+  | 'koshi-aria'
+  | 'woodstock'
+  | 'slendro'
+  | 'aeolian-harp';
+
+export type ReverbSpace = 'temple' | 'veranda' | 'garden' | 'cathedral';
+export type OctaveRegister = 'deep' | 'standard' | 'celestial';
+
+export interface ScaleDefinition {
+  id: ChimeScaleId;
+  name: string;
+  origin: string;
+  description: string;
+  notes: number[];
+}
+
+export const CHIME_SCALES: Record<ChimeScaleId, ScaleDefinition> = {
+  akebono: {
+    id: 'akebono',
+    name: 'Japanese Akebono',
+    origin: 'Edo Shrine & Garden',
+    description: 'Poetic, delicate high-register notes evoking morning breeze through cherry blossoms.',
+    notes: [
+      164.81, 174.61, 220.0, 246.94, 261.63, 329.63, 349.23, 440.0, 493.88, 523.25,
+      659.25, 698.46, 880.0, 987.77, 1046.5, 1318.51, 1396.91, 1760.0, 1975.53, 2093.0,
+    ],
+  },
+  'bamboo-folk': {
+    id: 'bamboo-folk',
+    name: 'Kyoto Folk Insen',
+    origin: 'Traditional Bamboo Chime',
+    description: 'Warm, earthy, hollow wooden intervals with organic grounded presence.',
+    notes: [
+      146.83, 155.56, 196.0, 220.0, 261.63, 293.66, 311.13, 392.0, 440.0, 523.25,
+      587.33, 622.25, 783.99, 880.0, 1046.5, 1174.66, 1244.51, 1567.98,
+    ],
+  },
+  tibetan: {
+    id: 'tibetan',
+    name: 'Tibetan Sacred Bronze',
+    origin: 'Himalayan Monastery',
+    description: 'Deep, majestic temple gong intervals with profound sub-bass undertones.',
+    notes: [
+      98.0, 116.54, 130.81, 146.83, 174.61, 196.0, 233.08, 261.63, 293.66, 349.23,
+      392.0, 466.16, 523.25, 587.33, 698.46, 783.99, 932.33, 1046.5,
+    ],
+  },
+  'singing-bowl': {
+    id: 'singing-bowl',
+    name: 'Sacred Om 432 Hz',
+    origin: 'Tibetan Singing Bowls',
+    description: 'Natural Verdi harmonic 5ths and octaves with soothing acoustic beating.',
+    notes: [
+      108.0, 162.0, 216.0, 270.0, 324.0, 432.0, 486.0, 540.0, 648.0, 864.0,
+      972.0, 1080.0, 1296.0, 1512.0, 1728.0,
+    ],
+  },
+  'koshi-aria': {
+    id: 'koshi-aria',
+    name: 'Silk & Crystal Koshi',
+    origin: 'Pyrenean Koshi Aria',
+    description: 'Pure, uplifting, crystalline Koshi harmonic series with shimmering ring.',
+    notes: [
+      220.0, 261.63, 329.63, 440.0, 493.88, 523.25, 659.25, 880.0, 987.77, 1046.5,
+      1318.51, 1567.98, 1760.0, 1975.53, 2093.0,
+    ],
+  },
+  woodstock: {
+    id: 'woodstock',
+    name: 'Woodstock Celestial',
+    origin: 'Tubular Wind Chime',
+    description: 'Classic American wind chime pentatonic with bright singing sustain.',
+    notes: [
+      261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25, 783.99, 880.0,
+      1046.5, 1174.66, 1318.51, 1567.98, 1760.0, 2093.0,
+    ],
+  },
+  slendro: {
+    id: 'slendro',
+    name: 'Balinese Slendro',
+    origin: 'Ancient Stone Lithophone',
+    description: 'Equidistant 5-tone mineral scale evoking ancient carved basalt rocks.',
+    notes: [
+      174.61, 200.0, 230.0, 265.0, 305.0, 349.23, 400.0, 460.0, 530.0, 610.0,
+      698.46, 800.0, 920.0, 1060.0, 1220.0, 1396.91,
+    ],
+  },
+  'aeolian-harp': {
+    id: 'aeolian-harp',
+    name: 'Aeolian Wind Harp',
+    origin: 'Open Air String Harp',
+    description: 'Rich string harmonic series with shimmering open fifths and octaves.',
+    notes: [
+      146.83, 220.0, 293.66, 369.99, 440.0, 554.37, 587.33, 739.99, 880.0, 1108.73,
+      1174.66, 1318.51, 1479.98, 1760.0, 2217.46,
+    ],
+  },
+};
+
+export const DEFAULT_MATERIAL_SCALES: Record<CurtainMaterial, ChimeScaleId> = {
+  furin: 'akebono',
+  bamboo: 'bamboo-folk',
+  bronze: 'tibetan',
+  bowl: 'singing-bowl',
+  crystal: 'koshi-aria',
+  silver: 'woodstock',
+  stone: 'slendro',
+  harp: 'aeolian-harp',
+};
+
+// Legacy backward-compatibility alias
+export const STRAND_PENTATONIC_SCALE = CHIME_SCALES.akebono.notes;
+
+interface ModalPartial {
+  ratio: number;
+  amp: number;
+  decayMultiplier: number;
+  type?: OscillatorType;
+  detuneHz?: number;
+}
+
+interface MaterialAcousticDef {
+  name: string;
+  fundamentalDecay: number;
+  attackTime: number;
+  volumeMultiplier: number;
+  partials: ModalPartial[];
+  transient: {
+    centerFreq: number;
+    duration: number;
+    gain: number;
+    q: number;
+    subThudFreq?: number;
+  };
+}
 
 export class CurtainAudioEngine {
   private ctx: AudioContext | null = null;
@@ -35,36 +151,54 @@ export class CurtainAudioEngine {
   private compressor: DynamicsCompressorNode | null = null;
   private reverbNode: ConvolverNode | null = null;
   private reverbGain: GainNode | null = null;
+  private dryGain: GainNode | null = null;
 
   public enabled: boolean = false;
-  public volume: number = 0.88; // Full, rich default volume
+  public volume: number = 0.88;
   public isMuted: boolean = false;
-  public material: CurtainMaterial = 'crystal';
+  public material: CurtainMaterial = 'furin';
+  public scaleId: ChimeScaleId = 'akebono';
+  public octave: OctaveRegister = 'standard';
+  public reverbSpace: ReverbSpace = 'temple';
 
-  // Polyphony management (allows up to 18 concurrent resonant voices)
+  // Polyphony management
   private activeVoices: { id: number; stopVoice: () => void }[] = [];
   private voiceCounter: number = 0;
-  private readonly maxPolyphony: number = 18;
+  private readonly maxPolyphony: number = 22;
   private lastGlobalNoteTime: number = 0;
-  private readonly minNoteIntervalMs: number = 20;
+  private readonly minNoteIntervalMs: number = 18;
 
   constructor() {}
 
-  public setMaterial(mat: CurtainMaterial): void {
+  public setMaterial(mat: CurtainMaterial, autoSwitchScale: boolean = true): void {
     this.material = mat;
+    if (autoSwitchScale && DEFAULT_MATERIAL_SCALES[mat]) {
+      this.scaleId = DEFAULT_MATERIAL_SCALES[mat];
+    }
   }
 
-  /**
-   * Returns current AudioContext state for UI & diagnostics
-   */
+  public setScale(scale: ChimeScaleId): void {
+    if (CHIME_SCALES[scale]) {
+      this.scaleId = scale;
+    }
+  }
+
+  public setOctave(octave: OctaveRegister): void {
+    this.octave = octave;
+  }
+
+  public async setReverbSpace(space: ReverbSpace): Promise<void> {
+    this.reverbSpace = space;
+    if (this.ctx && this.reverbNode) {
+      await this.generateReverbBuffer();
+    }
+  }
+
   public getContextState(): AudioContextState | 'uninitialized' {
     if (!this.ctx) return 'uninitialized';
     return this.ctx.state;
   }
 
-  /**
-   * Initializes or resumes the AudioContext directly inside user click handler
-   */
   public async enable(): Promise<boolean> {
     try {
       if (!this.ctx) {
@@ -73,30 +207,32 @@ export class CurtainAudioEngine {
           (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
         this.ctx = new AudioCtxClass();
 
-        // 1. Master Soft-Knee Compressor / Limiter for loud, warm, non-distorting sound
+        // Limiter/Compressor
         this.compressor = this.ctx.createDynamicsCompressor();
-        this.compressor.threshold.setValueAtTime(-2.5, this.ctx.currentTime);
-        this.compressor.knee.setValueAtTime(8, this.ctx.currentTime);
+        this.compressor.threshold.setValueAtTime(-2.0, this.ctx.currentTime);
+        this.compressor.knee.setValueAtTime(6, this.ctx.currentTime);
         this.compressor.ratio.setValueAtTime(14, this.ctx.currentTime);
-        this.compressor.attack.setValueAtTime(0.003, this.ctx.currentTime);
-        this.compressor.release.setValueAtTime(0.18, this.ctx.currentTime);
+        this.compressor.attack.setValueAtTime(0.002, this.ctx.currentTime);
+        this.compressor.release.setValueAtTime(0.2, this.ctx.currentTime);
 
-        // 2. Master Gain (Full, rich output level)
         this.masterGain = this.ctx.createGain();
         this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume * 0.95, this.ctx.currentTime);
 
-        this.masterGain.connect(this.compressor);
-        this.compressor.connect(this.ctx.destination);
+        this.dryGain = this.ctx.createGain();
+        this.dryGain.gain.setValueAtTime(0.85, this.ctx.currentTime);
 
-        // 3. Lush, warm, natural acoustic reverb space (creates peaceful lingering finish)
-        this.reverbNode = this.ctx.createConvolver();
         this.reverbGain = this.ctx.createGain();
-        this.reverbGain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+        this.reverbGain.gain.setValueAtTime(0.38, this.ctx.currentTime);
 
-        this.generateReverbBuffer();
+        this.reverbNode = this.ctx.createConvolver();
+        await this.generateReverbBuffer();
 
+        this.dryGain.connect(this.masterGain);
         this.reverbNode.connect(this.reverbGain);
         this.reverbGain.connect(this.masterGain);
+
+        this.masterGain.connect(this.compressor);
+        this.compressor.connect(this.ctx.destination);
       }
 
       if (this.ctx.state === 'suspended') {
@@ -131,39 +267,98 @@ export class CurtainAudioEngine {
     }
   }
 
-  /**
-   * Generates a lush, warm impulse response for natural chime reverberation and smooth fade
-   */
-  private generateReverbBuffer(): void {
+  private async generateReverbBuffer(): Promise<void> {
     if (!this.ctx || !this.reverbNode) return;
     const rate = this.ctx.sampleRate;
-    const length = Math.floor(rate * 3.0); // 3.0s lush decay
-    const buffer = this.ctx.createBuffer(2, length, rate);
-    const left = buffer.getChannelData(0);
-    const right = buffer.getChannelData(1);
+
+    let lengthSeconds = 3.2;
+    let decaySlope = 2.0;
+
+    if (this.reverbSpace === 'temple') {
+      lengthSeconds = 4.8;
+      decaySlope = 1.35;
+      if (this.reverbGain) this.reverbGain.gain.setTargetAtTime(0.48, this.ctx.currentTime, 0.05);
+    } else if (this.reverbSpace === 'cathedral') {
+      lengthSeconds = 6.0;
+      decaySlope = 1.1;
+      if (this.reverbGain) this.reverbGain.gain.setTargetAtTime(0.55, this.ctx.currentTime, 0.05);
+    } else if (this.reverbSpace === 'garden') {
+      lengthSeconds = 1.5;
+      decaySlope = 3.6;
+      if (this.reverbGain) this.reverbGain.gain.setTargetAtTime(0.25, this.ctx.currentTime, 0.05);
+    } else {
+      // veranda
+      lengthSeconds = 2.4;
+      decaySlope = 2.4;
+      if (this.reverbGain) this.reverbGain.gain.setTargetAtTime(0.35, this.ctx.currentTime, 0.05);
+    }
+
+    const length = Math.floor(rate * lengthSeconds);
+    const impulse = this.ctx.createBuffer(2, length, rate);
+    const left = impulse.getChannelData(0);
+    const right = impulse.getChannelData(1);
 
     for (let i = 0; i < length; i++) {
       const t = i / rate;
-      // Exponential decay with natural high-frequency air dampening
-      const decay = Math.exp(-t * 1.95);
-      left[i] = (Math.random() * 2 - 1) * decay;
-      right[i] = (Math.random() * 2 - 1) * decay;
+      const decay = Math.exp(-t * decaySlope);
+      // Discrete early reflection burst
+      let early = 0;
+      if (i === 180 || i === 420 || i === 850 || i === 1600) {
+        early = 0.45 * Math.exp(-t * 4);
+      }
+      left[i] = (Math.random() * 2 - 1) * decay + early;
+      right[i] = (Math.random() * 2 - 1) * decay - early * 0.8;
     }
-    this.reverbNode.buffer = buffer;
+
+    this.reverbNode.buffer = impulse;
   }
 
   /**
-   * Diagnostic test chime: plays a loud, calm, resonant chime note.
+   * Diagnostic single note chime
    */
   public async playTestChime(): Promise<void> {
     await this.enable();
     if (!this.ctx || this.ctx.state !== 'running') return;
-    this.playChimeNote(440.0, 0.5, 0.85);
+    const scale = CHIME_SCALES[this.scaleId] || CHIME_SCALES.akebono;
+    const midNote = scale.notes[Math.floor(scale.notes.length / 2)] || 440;
+    this.playChimeNote(midNote, 0.5, 0.85);
+  }
+
+  /**
+   * Plays a quick melodic cascade strum across 5 notes of the active scale
+   */
+  public async strumScale(velocity: number = 0.75): Promise<void> {
+    await this.enable();
+    if (!this.ctx || this.ctx.state !== 'running') return;
+    const scale = CHIME_SCALES[this.scaleId] || CHIME_SCALES.akebono;
+    const sampleNotes = [
+      scale.notes[1] || scale.notes[0],
+      scale.notes[3] || scale.notes[1],
+      scale.notes[5] || scale.notes[2],
+      scale.notes[7] || scale.notes[3],
+      scale.notes[9] || scale.notes[4],
+    ];
+
+    sampleNotes.forEach((f, idx) => {
+      setTimeout(() => {
+        const pan = 0.2 + (idx / (sampleNotes.length - 1)) * 0.6;
+        this.playChimeNote(f, pan, velocity);
+      }, idx * 110);
+    });
+  }
+
+  /**
+   * Play an explicit note from the active scale by index
+   */
+  public playNoteIndex(index: number, velocity: number = 0.7): void {
+    const scale = CHIME_SCALES[this.scaleId] || CHIME_SCALES.akebono;
+    const clamped = Math.max(0, Math.min(scale.notes.length - 1, index));
+    const pan = clamped / Math.max(1, scale.notes.length - 1);
+    this.playChimeNote(scale.notes[clamped], pan, velocity);
   }
 
   /**
    * Plays a tuned chime note for a specific individual chain/strand.
-   * Every single strand has its own unique, harmonious pitch!
    */
   public playStrandChime(
     strandIndex: number,
@@ -181,17 +376,17 @@ export class CurtainAudioEngine {
     }
     this.lastGlobalNoteTime = now;
 
-    // Map strand index smoothly across the pentatonic scale
-    const scaleLen = STRAND_PENTATONIC_SCALE.length;
+    const scale = CHIME_SCALES[this.scaleId] || CHIME_SCALES.akebono;
+    const scaleLen = scale.notes.length;
     const ratio = Math.max(0, Math.min(1, strandIndex / Math.max(1, totalStrands - 1)));
     const scaleIdx = Math.min(scaleLen - 1, Math.floor(ratio * scaleLen));
-    let freq = STRAND_PENTATONIC_SCALE[scaleIdx];
+    let freq = scale.notes[scaleIdx];
 
-    // Pitch shift according to material character
-    if (this.material === 'bronze') {
-      freq = freq * 0.75; // Deep temple gong range
-    } else if (this.material === 'furin') {
-      freq = freq * 1.15; // Higher sparkling bell range
+    // Apply register shift
+    if (this.octave === 'deep') {
+      freq *= 0.5;
+    } else if (this.octave === 'celestial') {
+      freq *= 1.5;
     }
 
     const stereoPan = panX !== undefined ? panX : ratio;
@@ -199,16 +394,15 @@ export class CurtainAudioEngine {
   }
 
   /**
-   * Synthesizes physical chime acoustic profile based on material:
-   * crystal, bamboo, bronze, or furin.
+   * Full physical modal synthesis per material.
    */
   public playChimeNote(freq: number, panX: number = 0.5, velocity: number = 0.65): void {
-    if (!this.ctx || !this.masterGain || this.isMuted) return;
+    if (!this.ctx || !this.masterGain || !this.dryGain || this.isMuted) return;
 
     const now = this.ctx.currentTime;
-    const strikeVel = Math.max(0.35, Math.min(1.0, velocity));
+    const strikeVel = Math.max(0.3, Math.min(1.0, velocity));
 
-    // Manage polyphony: gently fade oldest voice over 120ms
+    // Polyphony management
     if (this.activeVoices.length >= this.maxPolyphony) {
       const oldest = this.activeVoices.shift();
       if (oldest) {
@@ -216,146 +410,55 @@ export class CurtainAudioEngine {
       }
     }
 
-    // Stereo Panner (-0.75 to +0.75)
-    let panner: StereoPannerNode | GainNode;
+    // Stereo Panner
+    let voiceOut: AudioNode;
     if (this.ctx.createStereoPanner) {
       const sp = this.ctx.createStereoPanner();
-      const panVal = Math.max(-0.75, Math.min(0.75, (panX * 2 - 1) * 0.75));
+      const panVal = Math.max(-0.85, Math.min(0.85, (panX * 2 - 1) * 0.85));
       sp.pan.setValueAtTime(panVal, now);
-      sp.connect(this.masterGain);
+      sp.connect(this.dryGain);
       if (this.reverbNode) sp.connect(this.reverbNode);
-      panner = sp;
+      voiceOut = sp;
     } else {
-      panner = this.masterGain;
+      voiceOut = this.dryGain;
     }
 
-    // Material-specific acoustic parameters
-    let fundamentalDecay = 4.8;
-    let attackTime = 0.005;
-    let peakVolume = 0.38 * strikeVel;
-    let partials = [
-      { ratio: 1.0, amp: 1.0, type: 'sine' as OscillatorType },
-      { ratio: (freq + 0.85) / freq, amp: 0.78, type: 'sine' as OscillatorType },
-      { ratio: 2.756, amp: 0.32, type: 'sine' as OscillatorType },
-      { ratio: 5.404, amp: 0.12, type: 'sine' as OscillatorType },
-    ];
+    // Material Acoustic Definitions
+    const acousticDef = this.getAcousticDef(this.material, freq);
 
-    if (this.material === 'bamboo') {
-      // Hollow wood knocks: faster organic decay, woody odd harmonics
-      fundamentalDecay = 2.2;
-      peakVolume = 0.44 * strikeVel;
-      this.playTingTransient(now, strikeVel, panner, 680, 0.035);
-      partials = [
-        { ratio: 1.0, amp: 1.0, type: 'triangle' },
-        { ratio: 1.48, amp: 0.55, type: 'sine' },
-        { ratio: 2.12, amp: 0.28, type: 'sine' },
-      ];
-    } else if (this.material === 'bronze') {
-      // Deep temple bronze: extended 5.6s singing sustain, rich overtone warmth
-      fundamentalDecay = 5.6;
-      peakVolume = 0.42 * strikeVel;
-      attackTime = 0.008;
-      this.playTingTransient(now, strikeVel, panner, 1200, 0.028);
-      partials = [
-        { ratio: 1.0, amp: 1.0, type: 'sine' },
-        { ratio: (freq + 0.55) / freq, amp: 0.82, type: 'sine' },
-        { ratio: 1.98, amp: 0.35, type: 'sine' },
-        { ratio: 2.756, amp: 0.45, type: 'sine' },
-        { ratio: 4.12, amp: 0.16, type: 'sine' },
-      ];
-    } else if (this.material === 'furin') {
-      // Porcelain bell: high-frequency ting, clean crystal ring
-      fundamentalDecay = 3.6;
-      peakVolume = 0.36 * strikeVel;
-      this.playTingTransient(now, strikeVel, panner, 4200, 0.018);
-      partials = [
-        { ratio: 1.0, amp: 1.0, type: 'sine' },
-        { ratio: (freq + 1.1) / freq, amp: 0.72, type: 'sine' },
-        { ratio: 2.95, amp: 0.42, type: 'sine' },
-        { ratio: 5.8, amp: 0.15, type: 'sine' },
-      ];
-    } else if (this.material === 'bowl') {
-      // Himalayan singing bowl: profound fundamental with acoustic beating & 6.8s meditative sustain
-      fundamentalDecay = 6.8;
-      peakVolume = 0.46 * strikeVel;
-      attackTime = 0.015;
-      this.playTingTransient(now, strikeVel, panner, 540, 0.04);
-      partials = [
-        { ratio: 1.0, amp: 1.0, type: 'sine' },
-        { ratio: (freq + 0.38) / freq, amp: 0.88, type: 'sine' },
-        { ratio: 2.76, amp: 0.48, type: 'sine' },
-        { ratio: 4.18, amp: 0.22, type: 'sine' },
-      ];
-    } else if (this.material === 'silver') {
-      // Nordic frost silver: crystalline high sparkle, fast attack, 4.2s shimmer
-      fundamentalDecay = 4.2;
-      peakVolume = 0.38 * strikeVel;
-      attackTime = 0.003;
-      this.playTingTransient(now, strikeVel, panner, 5200, 0.015);
-      partials = [
-        { ratio: 1.0, amp: 1.0, type: 'sine' },
-        { ratio: 2.01, amp: 0.65, type: 'sine' },
-        { ratio: 3.14, amp: 0.38, type: 'sine' },
-        { ratio: 5.82, amp: 0.18, type: 'sine' },
-      ];
-    } else if (this.material === 'stone') {
-      // Obsidian tumbled stone: dense mineral clatter, quick 1.8s decay, natural organic settling
-      fundamentalDecay = 1.8;
-      peakVolume = 0.45 * strikeVel;
-      attackTime = 0.002;
-      this.playTingTransient(now, strikeVel, panner, 420, 0.03);
-      partials = [
-        { ratio: 1.0, amp: 1.0, type: 'triangle' },
-        { ratio: 1.62, amp: 0.52, type: 'sine' },
-        { ratio: 2.38, amp: 0.24, type: 'triangle' },
-      ];
-    } else if (this.material === 'harp') {
-      // Celestial Aeolian wind harp: soft plucked string, rich harmonic series, 5.2s lingering air
-      fundamentalDecay = 5.2;
-      peakVolume = 0.40 * strikeVel;
-      attackTime = 0.012;
-      this.playTingTransient(now, strikeVel, panner, 1600, 0.025);
-      partials = [
-        { ratio: 1.0, amp: 1.0, type: 'sine' },
-        { ratio: 2.0, amp: 0.55, type: 'sine' },
-        { ratio: 3.0, amp: 0.32, type: 'sine' },
-        { ratio: 4.0, amp: 0.16, type: 'sine' },
-      ];
-    } else {
-      // Default: Silk & Crystal Koshi
-      fundamentalDecay = 4.8;
-      this.playTingTransient(now, strikeVel, panner, 3600, 0.02);
-    }
+    // 1. Physical Impact Transient
+    this.playPhysicalTransient(now, strikeVel, voiceOut, acousticDef.transient);
 
-    const voiceGain = this.ctx.createGain();
-    voiceGain.gain.setValueAtTime(0.0001, now);
-    // Smooth attack
-    voiceGain.gain.linearRampToValueAtTime(Math.min(0.55, peakVolume), now + attackTime);
-    // Exponential fadeout ("at end it goes well")
-    voiceGain.gain.exponentialRampToValueAtTime(0.00006, now + fundamentalDecay);
-    voiceGain.connect(panner);
-
+    // 2. Modal Partials with independent decays
     const activeOscs: OscillatorNode[] = [];
+    const activeGains: GainNode[] = [];
+    const peakVol = acousticDef.volumeMultiplier * strikeVel;
 
-    partials.forEach(({ ratio, amp, type }) => {
+    acousticDef.partials.forEach(part => {
       if (!this.ctx) return;
-      const partialFreq = freq * ratio;
-      if (partialFreq > 18000) return;
+      const partFreq = freq * part.ratio + (part.detuneHz || 0);
+      if (partFreq > 18500 || partFreq < 30) return;
 
       const osc = this.ctx.createOscillator();
       const pGain = this.ctx.createGain();
+      osc.type = part.type || 'sine';
+      osc.frequency.setValueAtTime(partFreq, now);
 
-      osc.type = type || 'sine';
-      osc.frequency.setValueAtTime(partialFreq, now);
+      const partPeak = peakVol * part.amp;
+      const partDecay = Math.max(0.18, acousticDef.fundamentalDecay * part.decayMultiplier);
 
-      pGain.gain.setValueAtTime(amp, now);
+      pGain.gain.setValueAtTime(0.0001, now);
+      pGain.gain.linearRampToValueAtTime(partPeak, now + acousticDef.attackTime);
+      pGain.gain.exponentialRampToValueAtTime(0.00005, now + partDecay);
 
       osc.connect(pGain);
-      pGain.connect(voiceGain);
+      pGain.connect(voiceOut);
 
       osc.start(now);
-      osc.stop(now + fundamentalDecay + 0.05);
+      osc.stop(now + partDecay + 0.04);
+
       activeOscs.push(osc);
+      activeGains.push(pGain);
     });
 
     const voiceId = ++this.voiceCounter;
@@ -364,8 +467,12 @@ export class CurtainAudioEngine {
       stopVoice: () => {
         try {
           const stopTime = this.ctx ? this.ctx.currentTime : now;
-          voiceGain.gain.cancelScheduledValues(stopTime);
-          voiceGain.gain.linearRampToValueAtTime(0.0001, stopTime + 0.12);
+          activeGains.forEach(g => {
+            try {
+              g.gain.cancelScheduledValues(stopTime);
+              g.gain.linearRampToValueAtTime(0.0001, stopTime + 0.08);
+            } catch {}
+          });
           setTimeout(() => {
             activeOscs.forEach(o => {
               try {
@@ -373,42 +480,35 @@ export class CurtainAudioEngine {
                 o.disconnect();
               } catch {}
             });
-            try {
-              voiceGain.disconnect();
-            } catch {}
-          }, 140);
+            activeGains.forEach(g => {
+              try {
+                g.disconnect();
+              } catch {}
+            });
+          }, 100);
         } catch {}
       },
     };
 
     this.activeVoices.push(voiceRecord);
-
     setTimeout(() => {
       this.activeVoices = this.activeVoices.filter(v => v.id !== voiceId);
-      try {
-        voiceGain.disconnect();
-      } catch {}
-    }, (fundamentalDecay + 0.1) * 1000);
+    }, (acousticDef.fundamentalDecay + 0.1) * 1000);
   }
 
-  /**
-   * Generates initial strike impact transient
-   */
-  private playTingTransient(
+  private playPhysicalTransient(
     now: number,
     vel: number,
     out: AudioNode,
-    centerFreq: number = 3600,
-    duration: number = 0.02
+    params: MaterialAcousticDef['transient']
   ): void {
     if (!this.ctx) return;
-
-    const len = Math.floor(this.ctx.sampleRate * duration);
+    const len = Math.floor(this.ctx.sampleRate * params.duration);
     const buffer = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
 
     for (let i = 0; i < len; i++) {
-      const env = Math.exp(-i / (len * 0.22));
+      const env = Math.exp(-i / (len * 0.24));
       data[i] = (Math.random() * 2 - 1) * env;
     }
 
@@ -417,19 +517,224 @@ export class CurtainAudioEngine {
 
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(centerFreq, now);
-    filter.Q.setValueAtTime(2.6, now);
+    filter.frequency.setValueAtTime(params.centerFreq, now);
+    filter.Q.setValueAtTime(params.q, now);
 
     const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(vel * 0.18, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    gain.gain.setValueAtTime(vel * params.gain, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + params.duration);
 
     src.connect(filter);
     filter.connect(gain);
     gain.connect(out);
 
     src.start(now);
-    src.stop(now + duration + 0.01);
+    src.stop(now + params.duration + 0.01);
+
+    // Optional deep mallet body thud (for bronze gongs and heavy bowls)
+    if (params.subThudFreq && this.ctx) {
+      const thudOsc = this.ctx.createOscillator();
+      const thudGain = this.ctx.createGain();
+      thudOsc.type = 'sine';
+      thudOsc.frequency.setValueAtTime(params.subThudFreq, now);
+      thudOsc.frequency.exponentialRampToValueAtTime(params.subThudFreq * 0.5, now + 0.06);
+
+      thudGain.gain.setValueAtTime(vel * params.gain * 0.65, now);
+      thudGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+
+      thudOsc.connect(thudGain);
+      thudGain.connect(out);
+
+      thudOsc.start(now);
+      thudOsc.stop(now + 0.08);
+    }
+  }
+
+  private getAcousticDef(material: CurtainMaterial, freq: number): MaterialAcousticDef {
+    switch (material) {
+      case 'bamboo':
+        return {
+          name: 'Kyoto Temple Bamboo',
+          fundamentalDecay: 1.15,
+          attackTime: 0.003,
+          volumeMultiplier: 0.52,
+          transient: {
+            centerFreq: 640,
+            duration: 0.038,
+            gain: 0.42,
+            q: 2.2,
+            subThudFreq: 180,
+          },
+          partials: [
+            { ratio: 1.0, amp: 1.0, decayMultiplier: 1.0, type: 'triangle' },
+            { ratio: 1.48, amp: 0.62, decayMultiplier: 0.45, type: 'triangle' },
+            { ratio: 2.15, amp: 0.34, decayMultiplier: 0.28, type: 'sine' },
+            { ratio: 3.12, amp: 0.18, decayMultiplier: 0.15, type: 'sine' },
+          ],
+        };
+
+      case 'bronze':
+        return {
+          name: 'Ancient Temple Bronze',
+          fundamentalDecay: 6.8,
+          attackTime: 0.008,
+          volumeMultiplier: 0.46,
+          transient: {
+            centerFreq: 950,
+            duration: 0.032,
+            gain: 0.36,
+            q: 2.8,
+            subThudFreq: 110,
+          },
+          partials: [
+            // Sub-octave hum tone
+            { ratio: 0.5, amp: 0.55, decayMultiplier: 1.15, type: 'sine' },
+            // Fundamental strike tone
+            { ratio: 1.0, amp: 1.0, decayMultiplier: 1.0, type: 'sine' },
+            // Beating partner for undulating temple singing shimmer
+            { ratio: 1.0, amp: 0.85, decayMultiplier: 0.95, type: 'sine', detuneHz: 0.65 },
+            // Tierce (minor 3rd) characteristic of sacred bells
+            { ratio: 1.20, amp: 0.45, decayMultiplier: 0.72, type: 'sine' },
+            // Quint (5th)
+            { ratio: 1.50, amp: 0.38, decayMultiplier: 0.58, type: 'sine' },
+            // Inharmonic overtone
+            { ratio: 2.756, amp: 0.32, decayMultiplier: 0.38, type: 'sine' },
+            { ratio: 4.12, amp: 0.16, decayMultiplier: 0.22, type: 'sine' },
+          ],
+        };
+
+      case 'bowl':
+        return {
+          name: 'Himalayan Singing Bowl',
+          fundamentalDecay: 7.8,
+          attackTime: 0.025, // Soft friction/mallet swell
+          volumeMultiplier: 0.48,
+          transient: {
+            centerFreq: 420,
+            duration: 0.045,
+            gain: 0.28,
+            q: 2.0,
+            subThudFreq: 95,
+          },
+          partials: [
+            // Deep fundamental with audible binaural beating (1.2 Hz difference)
+            { ratio: 1.0, amp: 1.0, decayMultiplier: 1.0, type: 'sine' },
+            { ratio: 1.0, amp: 0.9, decayMultiplier: 0.98, type: 'sine', detuneHz: 1.2 },
+            // 2nd octave singing overtone
+            { ratio: 2.0, amp: 0.5, decayMultiplier: 0.75, type: 'sine' },
+            // Golden overtone
+            { ratio: 2.76, amp: 0.35, decayMultiplier: 0.52, type: 'sine' },
+            // Singing bowl lip vibration
+            { ratio: 4.18, amp: 0.22, decayMultiplier: 0.35, type: 'sine' },
+          ],
+        };
+
+      case 'furin':
+        return {
+          name: 'Edo Fūrin Wind Bell',
+          fundamentalDecay: 3.8,
+          attackTime: 0.003,
+          volumeMultiplier: 0.42,
+          transient: {
+            centerFreq: 4200,
+            duration: 0.016,
+            gain: 0.38,
+            q: 3.5,
+          },
+          partials: [
+            { ratio: 1.0, amp: 1.0, decayMultiplier: 1.0, type: 'sine' },
+            { ratio: 1.0, amp: 0.7, decayMultiplier: 0.88, type: 'sine', detuneHz: 1.5 },
+            { ratio: 2.95, amp: 0.45, decayMultiplier: 0.48, type: 'sine' },
+            { ratio: 5.8, amp: 0.22, decayMultiplier: 0.25, type: 'sine' },
+          ],
+        };
+
+      case 'silver':
+        return {
+          name: 'Nordic Frost Silver',
+          fundamentalDecay: 5.4,
+          attackTime: 0.003,
+          volumeMultiplier: 0.42,
+          transient: {
+            centerFreq: 5200,
+            duration: 0.018,
+            gain: 0.40,
+            q: 3.2,
+          },
+          partials: [
+            { ratio: 1.0, amp: 1.0, decayMultiplier: 1.0, type: 'sine' },
+            { ratio: 1.0, amp: 0.75, decayMultiplier: 0.94, type: 'sine', detuneHz: 0.75 },
+            { ratio: 2.756, amp: 0.42, decayMultiplier: 0.48, type: 'sine' },
+            { ratio: 5.404, amp: 0.24, decayMultiplier: 0.28, type: 'sine' },
+            { ratio: 8.933, amp: 0.08, decayMultiplier: 0.14, type: 'sine' },
+          ],
+        };
+
+      case 'stone':
+        return {
+          name: 'Obsidian River Stone',
+          fundamentalDecay: 0.48, // Very dry, rapid, tactile mineral clatter!
+          attackTime: 0.001,
+          volumeMultiplier: 0.58,
+          transient: {
+            centerFreq: 850,
+            duration: 0.024,
+            gain: 0.48,
+            q: 1.8,
+            subThudFreq: 260,
+          },
+          partials: [
+            // Solid non-harmonic mineral modes
+            { ratio: 1.0, amp: 1.0, decayMultiplier: 1.0, type: 'triangle' },
+            { ratio: 1.414, amp: 0.55, decayMultiplier: 0.55, type: 'triangle' },
+            { ratio: 1.83, amp: 0.32, decayMultiplier: 0.35, type: 'sine' },
+            { ratio: 2.37, amp: 0.18, decayMultiplier: 0.20, type: 'sine' },
+          ],
+        };
+
+      case 'harp':
+        return {
+          name: 'Celestial Aeolian Harp',
+          fundamentalDecay: 4.8,
+          attackTime: 0.012, // Plucked string bloom
+          volumeMultiplier: 0.44,
+          transient: {
+            centerFreq: 1800,
+            duration: 0.022,
+            gain: 0.32,
+            q: 2.5,
+          },
+          partials: [
+            // True string harmonic integer overtone series
+            { ratio: 1.0, amp: 1.0, decayMultiplier: 1.0, type: 'sine' },
+            { ratio: 2.0, amp: 0.62, decayMultiplier: 0.75, type: 'sine' },
+            { ratio: 3.0, amp: 0.38, decayMultiplier: 0.55, type: 'sine' },
+            { ratio: 4.0, amp: 0.22, decayMultiplier: 0.38, type: 'sine' },
+            { ratio: 5.0, amp: 0.12, decayMultiplier: 0.25, type: 'sine' },
+          ],
+        };
+
+      case 'crystal':
+      default:
+        return {
+          name: 'Silk & Crystal Koshi',
+          fundamentalDecay: 5.0,
+          attackTime: 0.004,
+          volumeMultiplier: 0.42,
+          transient: {
+            centerFreq: 3600,
+            duration: 0.02,
+            gain: 0.36,
+            q: 3.0,
+          },
+          partials: [
+            { ratio: 1.0, amp: 1.0, decayMultiplier: 1.0, type: 'sine' },
+            { ratio: 1.0, amp: 0.8, decayMultiplier: 0.95, type: 'sine', detuneHz: 0.85 },
+            { ratio: 2.756, amp: 0.38, decayMultiplier: 0.50, type: 'sine' },
+            { ratio: 5.404, amp: 0.18, decayMultiplier: 0.28, type: 'sine' },
+          ],
+        };
+    }
   }
 }
 

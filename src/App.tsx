@@ -2,12 +2,12 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-
 import React, { useState, useEffect, useRef } from 'react';
 import { GlyphCurtainConfig, SceneMode } from './types/curtain';
 import {
   CURTAIN_PRESETS,
   CurtainPreset,
+  CurtainMaterial,
 } from './data/curtainPresets';
 import {
   InteractiveGlyphCurtain,
@@ -15,16 +15,22 @@ import {
 } from './components/curtain/InteractiveGlyphCurtain';
 import { CurtainControls } from './components/curtain/CurtainControls';
 import { ExportCodeModal } from './components/curtain/ExportCodeModal';
-import { curtainAudio } from './components/curtain/curtainAudio';
+import {
+  curtainAudio,
+  ChimeScaleId,
+  CHIME_SCALES,
+  DEFAULT_MATERIAL_SCALES,
+  ReverbSpace,
+  OctaveRegister,
+} from './components/curtain/curtainAudio';
 import {
   Volume2,
   VolumeX,
   Sliders,
   Code2,
-  Sun,
-  Moon,
   Eye,
   EyeOff,
+  Music,
 } from 'lucide-react';
 
 export default function App() {
@@ -36,6 +42,18 @@ export default function App() {
   const [showControls, setShowControls] = useState<boolean>(true);
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
   const [showCanvasInfo, setShowCanvasInfo] = useState<boolean>(true);
+
+  // Dedicated Sound State (Material, Scale, Octave, Reverb)
+  const [soundMaterial, setSoundMaterial] = useState<CurtainMaterial>('furin');
+  const [soundScale, setSoundScale] = useState<ChimeScaleId>('akebono');
+  const [soundOctave, setSoundOctave] = useState<OctaveRegister>('standard');
+  const [soundReverb, setSoundReverb] = useState<ReverbSpace>('temple');
+
+  // Initialize default sound configuration on mount
+  useEffect(() => {
+    curtainAudio.setMaterial('furin', false);
+    curtainAudio.setScale('akebono');
+  }, []);
 
   // Inspector Panel Resizing (hold and drag left border to change width)
   const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
@@ -139,18 +157,48 @@ export default function App() {
       setActivePresetId(null);
       return;
     }
-
     setActivePresetId(preset.id);
-    const newColor = canvasTheme === 'dark'
-      ? (preset.effectOnlyConfig.glyphColor === '#1c1917' ? '#e11d48' : preset.effectOnlyConfig.glyphColor)
-      : preset.effectOnlyConfig.glyphColor;
+    const newColor =
+      canvasTheme === 'dark'
+        ? preset.effectOnlyConfig.glyphColor === '#1c1917'
+          ? '#e11d48'
+          : preset.effectOnlyConfig.glyphColor
+        : preset.effectOnlyConfig.glyphColor;
 
     setEffectConfig({
       ...preset.effectOnlyConfig,
       glyphColor: newColor,
     });
     setEntranceConfig(preset.entranceConfig);
-    curtainAudio.setMaterial(preset.material);
+
+    // Automatically apply signature material and tuned scale
+    const targetScale = preset.scale || DEFAULT_MATERIAL_SCALES[preset.material] || 'akebono';
+    curtainAudio.setMaterial(preset.material, false);
+    curtainAudio.setScale(targetScale);
+    setSoundMaterial(preset.material);
+    setSoundScale(targetScale);
+
+    if (audioEnabled) {
+      curtainAudio.strumScale(0.7);
+    }
+  };
+
+  const handlePreviewPresetSound = async (preset: CurtainPreset) => {
+    await curtainAudio.enable();
+    setAudioEnabled(true);
+    setAudioState(curtainAudio.getContextState());
+
+    curtainAudio.setMaterial(preset.material, false);
+    curtainAudio.setScale(preset.scale || DEFAULT_MATERIAL_SCALES[preset.material] || 'akebono');
+    await curtainAudio.strumScale(0.85);
+
+    // If preset is not the actively selected one, restore active sound settings
+    if (activePresetId !== preset.id) {
+      setTimeout(() => {
+        curtainAudio.setMaterial(soundMaterial, false);
+        curtainAudio.setScale(soundScale);
+      }, 750);
+    }
   };
 
   const handleUnselectPreset = () => {
@@ -184,6 +232,43 @@ export default function App() {
     setAudioState(curtainAudio.getContextState());
   };
 
+  const handleStrumScale = async () => {
+    await curtainAudio.enable();
+    setAudioEnabled(true);
+    setAudioState(curtainAudio.getContextState());
+    curtainAudio.strumScale(0.85);
+  };
+
+  const handleSoundMaterialChange = (mat: CurtainMaterial) => {
+    setSoundMaterial(mat);
+    curtainAudio.setMaterial(mat, true);
+    setSoundScale(curtainAudio.scaleId);
+    if (audioEnabled) {
+      curtainAudio.playTestChime();
+    }
+  };
+
+  const handleSoundScaleChange = (scale: ChimeScaleId) => {
+    setSoundScale(scale);
+    curtainAudio.setScale(scale);
+    if (audioEnabled) {
+      curtainAudio.strumScale(0.75);
+    }
+  };
+
+  const handleSoundOctaveChange = (oct: OctaveRegister) => {
+    setSoundOctave(oct);
+    curtainAudio.setOctave(oct);
+    if (audioEnabled) {
+      curtainAudio.playTestChime();
+    }
+  };
+
+  const handleSoundReverbChange = (rev: ReverbSpace) => {
+    setSoundReverb(rev);
+    curtainAudio.setReverbSpace(rev);
+  };
+
   const handleTestRipple = () => {
     curtainRef.current?.triggerTestRipple();
   };
@@ -210,33 +295,26 @@ export default function App() {
     handleSelectPreset(target);
   };
 
-  const handleCycleMotion = () => {
-    if (motionSetting === 'system') {
-      setMotionSetting('full');
-    } else if (motionSetting === 'full') {
-      setMotionSetting('reduced');
-    } else {
-      setMotionSetting('system');
-    }
-  };
-
-  // Toggle canvas theme and adjust contrast
   const handleToggleCanvasTheme = (theme: 'dark' | 'paper') => {
     setCanvasTheme(theme);
-    if (theme === 'dark' && effectConfig.glyphColor === '#1c1917') {
-      setEffectConfig(prev => ({ ...prev, glyphColor: '#e11d48' }));
-    } else if (theme === 'paper' && effectConfig.glyphColor === '#ffffff') {
-      setEffectConfig(prev => ({ ...prev, glyphColor: '#1c1917' }));
+    if (theme === 'paper') {
+      if (effectConfig.glyphColor === '#e11d48' || effectConfig.glyphColor === '#f43f5e') {
+        setEffectConfig({ ...effectConfig, glyphColor: '#1c1917' });
+      }
+    } else {
+      if (effectConfig.glyphColor === '#1c1917') {
+        setEffectConfig({ ...effectConfig, glyphColor: '#e11d48' });
+      }
     }
   };
 
-  const isSoundActive = audioEnabled && audioState === 'running' && !isMuted;
+  const isSoundActive = audioEnabled && audioState === 'running';
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden flex flex-col bg-[#09090b] text-stone-100 select-none antialiased">
-      {/* Top Bar Header (SaaS Studio Top Bar) */}
-      <header className="h-13 w-full flex items-center justify-between px-5 border-b border-white/[0.08] bg-[#0c0c0e]/95 backdrop-blur-md z-30 shrink-0">
-        {/* Zone 1: Wordmark */}
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#050507] text-stone-100 font-sans antialiased selection:bg-amber-500/30">
+      {/* Studio Top Control Bar */}
+      <header className="h-12 border-b border-white/[0.08] px-4 flex items-center justify-between shrink-0 bg-[#0c0c10] select-none z-30 shadow-sm">
+        {/* Zone 1: Brand & Current Workspace */}
         <div className="flex items-center gap-3">
           <span className="font-serif tracking-widest text-sm font-bold text-stone-100 uppercase">
             Resonant Curtain
@@ -248,6 +326,17 @@ export default function App() {
 
         {/* Zone 2: Primary Studio Actions */}
         <div className="flex items-center gap-2">
+          {/* Quick Sound Strum */}
+          <button
+            type="button"
+            onClick={handleStrumScale}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all cursor-pointer shadow-xs"
+            title="Strum chime scale"
+          >
+            <Music className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden md:inline">Strum Chimes</span>
+          </button>
+
           {/* Sound Toggle */}
           <button
             type="button"
@@ -267,7 +356,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setShowExportModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition-all cursor-pointer shadow-xs"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-stone-200 border border-white/15 transition-all cursor-pointer shadow-xs"
             title="Export and copy embed code"
           >
             <Code2 className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -292,33 +381,36 @@ export default function App() {
       </header>
 
       {/* Main Studio Workspace: Full-Height Canvas Stage + Collapsible Resizable Right Sidebar */}
-      <div className="relative flex-1 w-full overflow-hidden flex flex-row">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* The Hero Stage (Full Height / Width Interactive Canvas) */}
         <main
-          className={`relative flex-1 h-full overflow-hidden flex items-center justify-center transition-colors ${
-            canvasTheme === 'dark' ? 'bg-[#09090b]' : 'bg-[#fbf9f5]'
+          className={`flex-1 relative overflow-hidden transition-colors duration-500 ${
+            canvasTheme === 'paper' ? 'bg-[#f4efe6]' : 'bg-[#050507]'
           }`}
         >
-          {/* Floating Expand Tab on Right Edge (when Inspector is collapsed) */}
-          {!showControls && (
-            <button
-              type="button"
-              onClick={() => setShowControls(true)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 flex items-center gap-1.5 py-3.5 px-2 bg-[#141418]/90 hover:bg-[#1e1e24] border-l-0 border border-white/15 rounded-l-xl text-stone-300 hover:text-amber-300 backdrop-blur-md shadow-2xl transition-all cursor-pointer group"
-              title="Expand Inspector (Open Settings)"
-            >
-              <Sliders className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
-              <span className="[writing-mode:vertical-rl] text-[10px] font-mono tracking-widest uppercase text-stone-400 group-hover:text-stone-200">
-                Inspector
-              </span>
-            </button>
-          )}
+          {/* Subtle Studio Canvas Grid & Vignette */}
+          <div
+            className={`absolute inset-0 pointer-events-none transition-opacity duration-500 ${
+              canvasTheme === 'paper'
+                ? 'opacity-30 bg-[radial-gradient(#a8a29e_1px,transparent_1px)] [background-size:24px_24px]'
+                : 'opacity-15 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:32px_32px]'
+            }`}
+          />
+
+          {/* Top subtle vignette bar */}
+          <div
+            className={`absolute top-0 left-0 right-0 h-10 pointer-events-none z-10 transition-colors ${
+              canvasTheme === 'paper'
+                ? 'bg-gradient-to-b from-[#e5dfd3]/80 to-transparent'
+                : 'bg-gradient-to-b from-[#050507]/90 to-transparent'
+            }`}
+          />
 
           {/* Interactive Glyph Curtain Canvas */}
-          <div className="relative w-full h-full flex items-center justify-center">
+          <div className="w-full h-full relative">
             <InteractiveGlyphCurtain
               ref={curtainRef}
-              config={effectConfig}
+              config={currentConfig}
               audioEnabled={isSoundActive}
               reducedMotion={isReducedMotion}
               onDiagnosticsUpdate={setDiagnostics}
@@ -326,44 +418,45 @@ export default function App() {
             />
 
             {/* Quick Canvas Controls (Theme & HUD toggle) in Canvas Top-Right */}
-            <div className="absolute top-4 right-5 z-10 flex items-center gap-1.5 p-0.5 bg-black/40 backdrop-blur-md rounded-lg border border-white/10 text-[11px] font-mono shadow-sm">
+            <div className="absolute top-3 right-4 z-20 flex items-center gap-1 bg-black/40 backdrop-blur-md p-1 rounded-lg border border-white/10 shadow-lg">
+              {/* Dark Theme Button */}
               <button
                 type="button"
                 onClick={() => handleToggleCanvasTheme('dark')}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                className={`px-2 py-1 text-xs font-mono rounded flex items-center gap-1 transition-colors ${
                   canvasTheme === 'dark'
-                    ? 'bg-stone-800 text-stone-100 font-semibold shadow-xs'
+                    ? 'bg-white/20 text-white font-semibold'
                     : 'text-stone-400 hover:text-stone-200'
                 }`}
-                title="Studio Void Dark theme"
+                title="Dark Stage Theme"
               >
-                <Moon className="w-3 h-3" />
-                <span>Void</span>
+                <span>Dark</span>
               </button>
+
+              {/* Paper Theme Button */}
               <button
                 type="button"
                 onClick={() => handleToggleCanvasTheme('paper')}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                className={`px-2 py-1 text-xs font-mono rounded flex items-center gap-1 transition-colors ${
                   canvasTheme === 'paper'
-                    ? 'bg-stone-200 text-stone-900 font-semibold shadow-xs'
+                    ? 'bg-amber-100 text-stone-900 font-semibold'
                     : 'text-stone-400 hover:text-stone-200'
                 }`}
-                title="Japanese Gallery Paper theme"
+                title="Japanese Gallery Paper Theme"
               >
-                <Sun className="w-3 h-3" />
                 <span>Paper</span>
               </button>
 
-              <div className="w-[1px] h-3.5 bg-white/10 mx-0.5" />
+              <div className="w-px h-3.5 bg-white/10 mx-0.5" />
 
-              {/* HUD / Clean Zen View Toggle */}
+              {/* HUD / Zen Mode Toggle */}
               <button
                 type="button"
                 onClick={() => setShowCanvasInfo(prev => !prev)}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md transition-colors cursor-pointer ${
+                className={`px-2 py-1 text-xs font-mono rounded flex items-center gap-1 transition-colors ${
                   showCanvasInfo
-                    ? 'text-amber-300 font-medium'
-                    : 'text-stone-500 hover:text-stone-300'
+                    ? 'text-amber-300 hover:text-amber-200'
+                    : 'text-stone-400 hover:text-stone-200'
                 }`}
                 title={showCanvasInfo ? 'Hide canvas info (Zen mode)' : 'Show canvas info (HUD)'}
               >
@@ -375,7 +468,7 @@ export default function App() {
             {/* Clean Unboxed Metadata in Canvas Bottom-Left */}
             {showCanvasInfo && (
               <div
-                className={`absolute bottom-4 left-6 pointer-events-none text-xs font-mono tracking-wide flex items-center gap-2 ${
+                className={`absolute bottom-4 left-6 pointer-events-none text-xs font-mono tracking-wide flex items-center gap-2 flex-wrap ${
                   canvasTheme === 'dark' ? 'text-stone-400' : 'text-stone-600'
                 }`}
               >
@@ -385,9 +478,13 @@ export default function App() {
                 <span aria-hidden="true">·</span>
                 <span>{effectConfig.strandCount} Strands</span>
                 <span aria-hidden="true">·</span>
-                <span>Pentatonic Scale</span>
+                <span className="text-amber-400 font-medium">
+                  {CHIME_SCALES[soundScale]?.name || 'Akebono Scale'}
+                </span>
                 <span aria-hidden="true">·</span>
-                <span className="capitalize">{activePreset ? activePreset.material : curtainAudio.material}</span>
+                <span className="capitalize text-amber-300 font-medium">
+                  {soundMaterial} Chime
+                </span>
               </div>
             )}
 
@@ -456,6 +553,16 @@ export default function App() {
               onTestSound={handleTestSound}
               onTestRipple={handleTestRipple}
               diagnostics={diagnostics}
+              soundMaterial={soundMaterial}
+              onChangeSoundMaterial={handleSoundMaterialChange}
+              soundScale={soundScale}
+              onChangeSoundScale={handleSoundScaleChange}
+              soundOctave={soundOctave}
+              onChangeSoundOctave={handleSoundOctaveChange}
+              soundReverb={soundReverb}
+              onChangeSoundReverb={handleSoundReverbChange}
+              onStrumScale={handleStrumScale}
+              onPreviewPresetSound={handlePreviewPresetSound}
               onOpenExportModal={() => setShowExportModal(true)}
               onClose={() => setShowControls(false)}
             />
@@ -469,7 +576,7 @@ export default function App() {
         onClose={() => setShowExportModal(false)}
         config={currentConfig}
         presetName={activePreset ? activePreset.name : 'Custom Configuration'}
-        material={curtainAudio.material}
+        material={soundMaterial}
         volume={volume}
       />
     </div>

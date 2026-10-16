@@ -2,7 +2,6 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   GlyphCurtainConfig,
@@ -12,7 +11,15 @@ import {
   CURTAIN_PRESETS,
   CurtainPreset,
   PresetCategory,
+  CurtainMaterial,
 } from '../../data/curtainPresets';
+import {
+  ChimeScaleId,
+  CHIME_SCALES,
+  ReverbSpace,
+  OctaveRegister,
+  curtainAudio,
+} from './curtainAudio';
 import {
   Sliders,
   Volume2,
@@ -29,6 +36,9 @@ import {
   X,
   Sparkles,
   Info,
+  Music,
+  Radio,
+  Disc,
 } from 'lucide-react';
 
 export interface CurtainControlsProps {
@@ -62,9 +72,101 @@ export interface CurtainControlsProps {
     isInside: boolean;
     affectedStrands: number;
   };
+  // Dedicated Sound System Props
+  soundMaterial: CurtainMaterial;
+  onChangeSoundMaterial: (mat: CurtainMaterial) => void;
+  soundScale: ChimeScaleId;
+  onChangeSoundScale: (scale: ChimeScaleId) => void;
+  soundOctave: OctaveRegister;
+  onChangeSoundOctave: (oct: OctaveRegister) => void;
+  soundReverb: ReverbSpace;
+  onChangeSoundReverb: (rev: ReverbSpace) => void;
+  onStrumScale: () => void;
+  onPreviewPresetSound?: (preset: CurtainPreset) => void;
   onOpenExportModal?: () => void;
   onClose?: () => void;
 }
+
+const MATERIAL_OPTIONS: {
+  id: CurtainMaterial;
+  emoji: string;
+  name: string;
+  badge: string;
+  subtitle: string;
+  color: string;
+}[] = [
+  {
+    id: 'furin',
+    emoji: '🎐',
+    name: 'Edo Fūrin',
+    badge: '3.8s Glass Bell',
+    subtitle: 'High-frequency porcelain wind bell with sparkling breeze flutter',
+    color: '#f43f5e',
+  },
+  {
+    id: 'bamboo',
+    emoji: '🎋',
+    name: 'Kyoto Bamboo',
+    badge: '1.1s Hollow Wood',
+    subtitle: 'Warm organic hollow wood knocks with earthy Helmholtz resonance',
+    color: '#d97706',
+  },
+  {
+    id: 'bronze',
+    emoji: '🔔',
+    name: 'Temple Bronze',
+    badge: '6.8s Gong Sustain',
+    subtitle: 'Deep Tibetan temple gong with rich singing undertones & sub-bass',
+    color: '#f59e0b',
+  },
+  {
+    id: 'bowl',
+    emoji: '🥣',
+    name: 'Singing Bowl',
+    badge: '7.8s Sacred Drone',
+    subtitle: 'Himalayan singing bowl with meditative binaural acoustic beating',
+    color: '#14b8a6',
+  },
+  {
+    id: 'crystal',
+    emoji: '💎',
+    name: 'Crystal Koshi',
+    badge: '5.0s Crystalline',
+    subtitle: 'Pyrenean crystal rods with pure Koshi harmonic series',
+    color: '#38bdf8',
+  },
+  {
+    id: 'silver',
+    emoji: '✨',
+    name: 'Frost Silver',
+    badge: '5.4s Aluminum',
+    subtitle: 'Extruded aluminum tubular chime with crisp singing overtone',
+    color: '#e879f9',
+  },
+  {
+    id: 'stone',
+    emoji: '🪨',
+    name: 'River Stone',
+    badge: '0.5s Lithophone',
+    subtitle: 'Carved obsidian lithophone with dry tactile organic mineral clacks',
+    color: '#a8a29e',
+  },
+  {
+    id: 'harp',
+    emoji: '🪕',
+    name: 'Aeolian Harp',
+    badge: '4.8s Wind Strings',
+    subtitle: 'Open-air wind harp with rich string harmonics & plucked attack',
+    color: '#818cf8',
+  },
+];
+
+const REVERB_OPTIONS: { id: ReverbSpace; name: string; desc: string }[] = [
+  { id: 'temple', name: 'Mountain Temple', desc: '4.8s deep cathedral decay' },
+  { id: 'veranda', name: 'Covered Veranda', desc: '2.4s warm wood reflections' },
+  { id: 'garden', name: 'Open Zen Garden', desc: '1.5s crisp open-air clarity' },
+  { id: 'cathedral', name: 'Cosmic Cathedral', desc: '6.0s monumental shimmering tail' },
+];
 
 export const CurtainControls: React.FC<CurtainControlsProps> = ({
   config,
@@ -92,10 +194,20 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
   onTestSound,
   onTestRipple,
   diagnostics,
+  soundMaterial,
+  onChangeSoundMaterial,
+  soundScale,
+  onChangeSoundScale,
+  soundOctave,
+  onChangeSoundOctave,
+  soundReverb,
+  onChangeSoundReverb,
+  onStrumScale,
+  onPreviewPresetSound,
   onOpenExportModal,
   onClose,
 }) => {
-  const [activeTab, setActiveTab] = useState<'presets' | 'visuals' | 'physics'>('presets');
+  const [activeTab, setActiveTab] = useState<'presets' | 'sound' | 'visuals' | 'physics'>('presets');
   const [customText, setCustomText] = useState<string>(config.glyphSet);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<PresetCategory | 'favorites'>('all');
@@ -147,7 +259,6 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
   // Filtered presets based on search query and category/favorite tab
   const filteredPresets = useMemo(() => {
     let list = CURTAIN_PRESETS;
-
     if (selectedCategory === 'favorites') {
       list = list.filter(p => favoriteIds.includes(p.id));
     } else if (selectedCategory !== 'all') {
@@ -166,7 +277,6 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
           p.effectOnlyConfig.glyphSet.includes(q)
       );
     }
-
     return list;
   }, [selectedCategory, favoriteIds, searchQuery]);
 
@@ -182,7 +292,6 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
       setTimeout(() => setLoadNotice(null), 3000);
       return;
     }
-
     onSelectPreset(preset);
     setLoadNotice(`✓ Loaded all visuals & physics for ${preset.name}`);
     setTimeout(() => setLoadNotice(null), 3000);
@@ -207,6 +316,8 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
     { label: 'Nordic Runes', chars: 'ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛈᛇᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ' },
     { label: 'Alchemical', chars: '🜂🜄🜁🜃🜔🜕🜖🝡🝢☉☽☿♀♂♃♄☼✦☥' },
   ];
+
+  const currentScaleDef = CHIME_SCALES[soundScale] || CHIME_SCALES.akebono;
 
   return (
     <div className="w-full h-full flex flex-col bg-[#09090c] text-stone-200 border-stone-800/80 overflow-hidden select-none">
@@ -248,9 +359,9 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
         </div>
       </div>
 
-      {/* Modern SaaS Segmented Tabs */}
+      {/* Modern SaaS Segmented Tabs (4 TABS including SOUND) */}
       <div className="px-3 pt-2.5 pb-2 border-b border-white/[0.06] bg-[#0c0c10] shrink-0">
-        <div className="grid grid-cols-3 gap-1 p-0.5 bg-[#050508] rounded-lg border border-white/[0.06]">
+        <div className="grid grid-cols-4 gap-1 p-0.5 bg-[#050508] rounded-lg border border-white/[0.06]">
           <button
             type="button"
             onClick={() => setActiveTab('presets')}
@@ -261,6 +372,18 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
             }`}
           >
             Models ({CURTAIN_PRESETS.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('sound')}
+            className={`py-1 text-[11px] font-medium rounded-md transition-all cursor-pointer truncate flex items-center justify-center gap-1 ${
+              activeTab === 'sound'
+                ? 'bg-stone-800 text-amber-300 shadow-sm font-semibold'
+                : 'text-stone-400 hover:text-stone-200'
+            }`}
+          >
+            <Music className="w-3 h-3 text-amber-400 shrink-0" />
+            <span>Sound</span>
           </button>
           <button
             type="button"
@@ -322,111 +445,83 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
                     </span>
                   </div>
                 ) : (
-                  <span className="text-xs font-medium text-stone-400 italic">
-                    Custom Mode (No model locked)
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                    <span className="text-xs font-medium text-amber-300">
+                      Custom Mode (Unconstrained)
+                    </span>
+                  </div>
                 )}
               </div>
 
-              {activePresetId && (
+              {activePreset && (
                 <button
                   type="button"
                   onClick={() => {
                     if (onUnselectPreset) onUnselectPreset();
-                    setLoadNotice('Unselected active model · Entered Custom Mode');
+                    setLoadNotice('Switched to Custom Mode');
                     setTimeout(() => setLoadNotice(null), 3000);
                   }}
-                  className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white border border-white/10 transition-colors cursor-pointer shrink-0"
+                  className="px-2 py-1 text-[11px] font-medium text-stone-400 hover:text-stone-200 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-md transition-colors cursor-pointer"
                   title="Unselect active preset and allow free custom edits"
                 >
-                  <X className="w-3 h-3 text-stone-400" />
-                  <span>Unselect</span>
+                  Unselect
                 </button>
               )}
             </div>
 
-            {/* Search Input */}
+            {/* Search Input Bar */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-stone-500 absolute left-2.5 top-2.5 pointer-events-none" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-stone-500 pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search models, sound, glyphs..."
-                className="w-full bg-black/40 border border-white/10 rounded-lg pl-8 pr-7 py-1.5 text-xs font-mono text-stone-200 placeholder:text-stone-500 focus:outline-none focus:border-amber-400/50"
+                className="w-full bg-black/40 border border-white/10 rounded-lg pl-8 pr-7 py-1.5 text-xs font-mono text-stone-200 placeholder:text-stone-600 focus:outline-none focus:border-amber-400/50"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2 top-2 text-stone-500 hover:text-stone-300"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-300 text-xs"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  ✕
                 </button>
               )}
             </div>
 
-            {/* Category & Favorite Filters */}
-            <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none text-[11px]">
-              <button
-                type="button"
-                onClick={() => setSelectedCategory('all')}
-                className={`px-2.5 py-1 rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                  selectedCategory === 'all'
-                    ? 'bg-stone-800 text-stone-100 font-semibold border border-white/10'
-                    : 'text-stone-400 hover:text-stone-200 hover:bg-white/[0.04]'
-                }`}
-              >
-                All ({CURTAIN_PRESETS.length})
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedCategory('favorites')}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                  selectedCategory === 'favorites'
-                    ? 'bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/40'
-                    : 'text-amber-400/80 hover:text-amber-300 hover:bg-amber-400/[0.06]'
-                }`}
-              >
-                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                <span>Favorites ({favoriteIds.length})</span>
-              </button>
-
-              {(['acoustic', 'cyber', 'elemental', 'sacred'] as const).map(cat => (
+            {/* Category Filter Pills */}
+            <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[11px] font-mono no-scrollbar">
+              {(
+                [
+                  { id: 'all', label: 'All' },
+                  { id: 'favorites', label: `★ Favorites (${favoriteIds.length})` },
+                  { id: 'acoustic', label: 'Acoustic' },
+                  { id: 'elemental', label: 'Elemental' },
+                  { id: 'sacred', label: 'Sacred' },
+                  { id: 'cyber', label: 'Cyber' },
+                ] as const
+              ).map(cat => (
                 <button
-                  key={cat}
+                  key={cat.id}
                   type="button"
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-2.5 py-1 rounded-md capitalize transition-colors whitespace-nowrap cursor-pointer ${
-                    selectedCategory === cat
-                      ? 'bg-stone-800 text-stone-100 font-semibold border border-white/10'
-                      : 'text-stone-400 hover:text-stone-200 hover:bg-white/[0.04]'
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-2.5 py-1 rounded-md whitespace-nowrap transition-colors cursor-pointer ${
+                    selectedCategory === cat.id
+                      ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40 font-semibold'
+                      : 'bg-white/[0.03] text-stone-400 hover:text-stone-200 border border-white/[0.06]'
                   }`}
                 >
-                  {cat}
+                  {cat.label}
                 </button>
               ))}
             </div>
 
-            {/* Model Cards List */}
+            {/* Presets List */}
             {filteredPresets.length === 0 ? (
-              <div className="p-6 text-center rounded-xl border border-dashed border-white/10 bg-white/[0.01]">
-                <Info className="w-5 h-5 text-stone-500 mx-auto mb-2" />
-                <p className="text-xs text-stone-400">
-                  {selectedCategory === 'favorites'
-                    ? 'No favorites starred yet. Click the star ★ on any model to bookmark it.'
-                    : 'No models matched your search.'}
-                </p>
-                {selectedCategory === 'favorites' && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCategory('all')}
-                    className="mt-3 text-xs text-amber-400 hover:underline cursor-pointer"
-                  >
-                    View All Models
-                  </button>
-                )}
+              <div className="py-8 text-center text-stone-500 text-xs">
+                No matching models found.
               </div>
             ) : (
               <div className="space-y-2">
@@ -438,24 +533,22 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
                     <div
                       key={p.id}
                       onClick={() => handlePresetClick(p)}
-                      className={`relative w-full text-left p-3 rounded-xl border transition-all cursor-pointer group ${
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer group relative ${
                         isActive
-                          ? 'bg-amber-500/[0.09] border-amber-500/50 text-stone-100 shadow-md ring-1 ring-amber-500/30'
-                          : 'bg-white/[0.02] border-white/[0.07] text-stone-400 hover:text-stone-200 hover:bg-white/[0.04]'
+                          ? 'bg-gradient-to-br from-amber-950/40 via-stone-900/90 to-stone-900 border-amber-400/60 shadow-lg ring-1 ring-amber-400/30'
+                          : 'bg-white/[0.02] hover:bg-white/[0.05] border-white/[0.06] hover:border-white/20'
                       }`}
                     >
-                      {/* Top Row: Color Swatch + Name + Category + Favorite Star */}
+                      {/* Card Header: Color chip + Name + Star */}
                       <div className="flex items-center justify-between gap-2 mb-1.5">
                         <div className="flex items-center gap-2 min-w-0">
-                          {/* Visual Swatch Pill */}
-                          <div
-                            className="w-3.5 h-3.5 rounded-full shrink-0 border border-white/20 shadow-xs"
+                          <span
+                            className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs ring-1 ring-white/20"
                             style={{ backgroundColor: p.effectOnlyConfig.glyphColor }}
-                            title={`Color: ${p.effectOnlyConfig.glyphColor}`}
                           />
                           <span
-                            className={`text-xs font-bold truncate ${
-                              isActive ? 'text-amber-300' : 'text-stone-200'
+                            className={`text-xs font-semibold truncate ${
+                              isActive ? 'text-amber-200' : 'text-stone-200 group-hover:text-white'
                             }`}
                           >
                             {p.name}
@@ -463,7 +556,6 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
                         </div>
 
                         <div className="flex items-center gap-1.5 shrink-0">
-                          {/* Active / Deselect Pill */}
                           {isActive ? (
                             <span
                               className="text-[9px] font-mono font-semibold text-emerald-300 bg-emerald-500/15 px-1.5 py-0.5 rounded border border-emerald-500/30"
@@ -502,19 +594,41 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
                         {p.tagline}
                       </p>
 
-                      {/* Specs Row: Sound Material, Strands, Sample Glyphs */}
+                      {/* Specs Row: Sound Material, Strands, Sample Glyphs + HEAR SOUND Button */}
                       <div className="text-[10px] text-stone-500 font-mono border-t border-white/[0.06] pt-1.5 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="capitalize">Sound: {p.material}</span>
+                          <span className="capitalize text-amber-300/90 font-medium">
+                            {p.material === 'furin' && '🎐 '}
+                            {p.material === 'bamboo' && '🎋 '}
+                            {p.material === 'bronze' && '🔔 '}
+                            {p.material === 'bowl' && '🥣 '}
+                            {p.material === 'crystal' && '💎 '}
+                            {p.material === 'silver' && '✨ '}
+                            {p.material === 'stone' && '🪨 '}
+                            {p.material === 'harp' && '🪕 '}
+                            {p.material}
+                          </span>
                           <span>·</span>
                           <span>{p.effectOnlyConfig.strandCount} cords</span>
                         </div>
-                        <span
-                          className="text-[11px] tracking-widest text-stone-400 font-mono"
-                          title="Sample Glyphs"
+
+                        {/* Direct Sound Preview Button */}
+                        <button
+                          type="button"
+                          onClick={e => {
+                            e.stopPropagation();
+                            if (onPreviewPresetSound) {
+                              onPreviewPresetSound(p);
+                            } else {
+                              onSelectPreset(p);
+                            }
+                          }}
+                          className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/[0.06] hover:bg-amber-400/20 text-stone-300 hover:text-amber-300 border border-white/[0.08] transition-all cursor-pointer"
+                          title="Preview authentic chime sound for this selection"
                         >
-                          {p.effectOnlyConfig.glyphSet.slice(0, 4)}
-                        </span>
+                          <Play className="w-2.5 h-2.5 fill-current text-amber-400" />
+                          <span>Preview Sound</span>
+                        </button>
                       </div>
                     </div>
                   );
@@ -550,7 +664,252 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
         )}
 
         {/* ======================================================== */}
-        {/* TAB 2: VISUALS & CHARACTER SETS                          */}
+        {/* TAB 2: DEDICATED SOUND & MATERIAL CUSTOMIZER             */}
+        {/* ======================================================== */}
+        {activeTab === 'sound' && (
+          <div className="space-y-4">
+            {/* Master Audio Card */}
+            <div className="p-3 rounded-xl border bg-gradient-to-b from-[#14141c] to-[#0e0e14] border-white/[0.08] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      audioEnabled && audioContextState === 'running'
+                        ? 'bg-emerald-400 animate-pulse'
+                        : 'bg-stone-600'
+                    }`}
+                  />
+                  <span className="text-xs font-bold font-mono tracking-wider text-stone-200">
+                    Acoustic Engine
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={onToggleAudio}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition-all cursor-pointer ${
+                    audioEnabled
+                      ? 'bg-emerald-950/70 border-emerald-500/60 text-emerald-300'
+                      : 'bg-white/[0.04] border-white/10 text-stone-400 hover:text-stone-200'
+                  }`}
+                >
+                  {audioEnabled ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
+                  <span>{audioEnabled ? 'Active' : 'Enable'}</span>
+                </button>
+              </div>
+
+              {/* Master Volume */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-stone-400 font-mono">
+                  <span>Output Volume</span>
+                  <span className="text-amber-300 font-semibold">{Math.round(volume * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.02}
+                  value={volume}
+                  onChange={e => onChangeVolume(parseFloat(e.target.value))}
+                  className="w-full accent-amber-400"
+                />
+              </div>
+
+              {/* Strum & Test Buttons */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={onStrumScale}
+                  className="py-1.5 px-2.5 text-xs font-semibold rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Sparkles className="w-3 h-3 text-amber-400" />
+                  <span>Strum Chimes</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={onTestSound}
+                  className="py-1.5 px-2.5 text-xs font-medium rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-stone-200 border border-white/[0.08] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Play className="w-3 h-3 text-stone-300" />
+                  <span>Strike Note</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Chime Material Selector (8 Distinct Physical Materials) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider font-mono">
+                  Physical Sound Material
+                </span>
+                <span className="text-[10px] font-mono text-amber-300/80 capitalize">
+                  Current: {soundMaterial}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                {MATERIAL_OPTIONS.map(mat => {
+                  const isSelected = soundMaterial === mat.id;
+                  return (
+                    <div
+                      key={mat.id}
+                      onClick={() => onChangeSoundMaterial(mat.id)}
+                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer relative group ${
+                        isSelected
+                          ? 'bg-amber-950/40 border-amber-400/80 shadow-md ring-1 ring-amber-400/40'
+                          : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/[0.06] hover:border-white/20'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-base">{mat.emoji}</span>
+                        <span
+                          className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
+                            isSelected
+                              ? 'bg-amber-400/20 text-amber-300 font-semibold'
+                              : 'bg-white/[0.04] text-stone-500'
+                          }`}
+                        >
+                          {mat.badge}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-stone-200 group-hover:text-white truncate">
+                        {mat.name}
+                      </div>
+                      <div className="text-[10px] text-stone-400 line-clamp-2 leading-relaxed mt-0.5">
+                        {mat.subtitle}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Cultural Tuning Scale Selector (8 Scales) */}
+            <div className="space-y-2 pt-2 border-t border-white/[0.06]">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider font-mono">
+                  Harmonic Tuning Scale
+                </span>
+                <span className="text-[10px] font-mono text-stone-500">
+                  {currentScaleDef.origin}
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                {(Object.keys(CHIME_SCALES) as ChimeScaleId[]).map(scaleKey => {
+                  const s = CHIME_SCALES[scaleKey];
+                  const isSelected = soundScale === scaleKey;
+                  return (
+                    <div
+                      key={scaleKey}
+                      onClick={() => onChangeSoundScale(scaleKey)}
+                      className={`p-2 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between ${
+                        isSelected
+                          ? 'bg-amber-500/15 border-amber-400/60 text-amber-200'
+                          : 'bg-white/[0.02] hover:bg-white/[0.05] border-white/[0.06] text-stone-300'
+                      }`}
+                    >
+                      <div className="min-w-0 pr-2">
+                        <div className="text-xs font-medium truncate flex items-center gap-1.5">
+                          {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />}
+                          <span>{s.name}</span>
+                        </div>
+                        <div className="text-[10px] text-stone-500 truncate">
+                          {s.description}
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-mono text-stone-500 uppercase shrink-0">
+                        {s.notes.length} notes
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Octave & Pitch Register */}
+            <div className="space-y-2 pt-2 border-t border-white/[0.06]">
+              <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider font-mono block">
+                Octave & Register
+              </span>
+              <div className="grid grid-cols-3 gap-1 p-0.5 bg-black/40 rounded-lg border border-white/10 text-xs">
+                {(
+                  [
+                    { id: 'deep', label: 'Deep (-1 Oct)' },
+                    { id: 'standard', label: 'Concert Pitch' },
+                    { id: 'celestial', label: 'Celestial (+1)' },
+                  ] as const
+                ).map(item => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => onChangeSoundOctave(item.id)}
+                    className={`py-1.5 text-[11px] font-medium rounded-md transition-colors cursor-pointer ${
+                      soundOctave === item.id
+                        ? 'bg-stone-800 text-amber-300 font-semibold shadow-xs'
+                        : 'text-stone-400 hover:text-stone-200'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Acoustic Space (Reverb Environment) */}
+            <div className="space-y-2 pt-2 border-t border-white/[0.06]">
+              <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider font-mono block">
+                Acoustic Space (Convolver Reverb)
+              </span>
+              <div className="grid grid-cols-2 gap-1.5">
+                {REVERB_OPTIONS.map(rev => (
+                  <button
+                    key={rev.id}
+                    type="button"
+                    onClick={() => onChangeSoundReverb(rev.id)}
+                    className={`p-2 rounded-lg border text-left transition-colors cursor-pointer ${
+                      soundReverb === rev.id
+                        ? 'bg-stone-800 border-amber-400/60 text-amber-300'
+                        : 'bg-white/[0.02] hover:bg-white/[0.05] border-white/[0.06] text-stone-400 hover:text-stone-200'
+                    }`}
+                  >
+                    <div className="text-xs font-semibold">{rev.name}</div>
+                    <div className="text-[10px] text-stone-500 font-mono">{rev.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Interactive Note Strip (Direct Play) */}
+            <div className="pt-2 border-t border-white/[0.06] space-y-2">
+              <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider font-mono block">
+                Interactive Chime Note Keys
+              </span>
+              <p className="text-[10px] text-stone-500 font-mono">
+                Click any chime key below to play individual notes with the active material:
+              </p>
+              <div className="grid grid-cols-5 sm:grid-cols-6 gap-1">
+                {currentScaleDef.notes.slice(0, 10).map((freq, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      curtainAudio.enable().then(() => {
+                        curtainAudio.playNoteIndex(idx, 0.85);
+                      });
+                    }}
+                    className="py-2 text-[10px] font-mono font-medium rounded bg-white/[0.04] hover:bg-amber-400/20 hover:text-amber-300 text-stone-300 border border-white/[0.08] transition-colors cursor-pointer text-center"
+                    title={`Strike ${Math.round(freq)} Hz`}
+                  >
+                    #{idx + 1}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* TAB 3: VISUALS & CHARACTER SETS                          */}
         {/* ======================================================== */}
         {activeTab === 'visuals' && (
           <div className="space-y-4">
@@ -698,7 +1057,7 @@ export const CurtainControls: React.FC<CurtainControlsProps> = ({
         )}
 
         {/* ======================================================== */}
-        {/* TAB 3: REAL-WORLD PHYSICS PARAMETERS                     */}
+        {/* TAB 4: REAL-WORLD PHYSICS PARAMETERS                     */}
         {/* ======================================================== */}
         {activeTab === 'physics' && (
           <div className="space-y-4">
